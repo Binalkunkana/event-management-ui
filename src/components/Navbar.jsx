@@ -1,7 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../index.css";
 
 const Navbar = () => {
+    const navigate = useNavigate();
+    const role = localStorage.getItem("role")?.toLowerCase();
+    const isLoggedIn = !!localStorage.getItem("token");
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
+
     return (
         <nav className="navbar navbar-expand-lg fixed-top manup-navbar">
             <div className="container">
@@ -27,18 +36,21 @@ const Navbar = () => {
                 <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
                     <ul className="navbar-nav gap-4">
                         <li className="nav-item">
-                            <Link className="nav-link text-uppercase fw-bold text-dark active-link" to="/">Home</Link>
+                            <Link className="nav-link text-uppercase fw-bold text-dark" to="/user">Home</Link>
                         </li>
                         <li className="nav-item">
                             <Link className="nav-link text-uppercase fw-bold text-dark" to="/events">Events</Link>
                         </li>
-                        <li className="nav-item">
-                            <Link className="nav-link text-uppercase fw-bold text-dark" to="/dashboard">Schedule</Link>
-                        </li>
-                        <li className="nav-item">
-                            {/* Placeholder links */}
-                            <a className="nav-link text-uppercase fw-bold text-dark" href="#">Blog</a>
-                        </li>
+                        {isLoggedIn && (
+                            <li className="nav-item">
+                                <Link className="nav-link text-uppercase fw-bold text-dark" to="/dashboard">My Schedule</Link>
+                            </li>
+                        )}
+                        {(role === "admin" || role === "organizer" || role === "manager") && (
+                            <li className="nav-item">
+                                <Link className="nav-link text-uppercase fw-bold text-danger" to="/admin">Admin Panel</Link>
+                            </li>
+                        )}
                         <li className="nav-item">
                             <a className="nav-link text-uppercase fw-bold text-dark" href="#">Contacts</a>
                         </li>
@@ -47,9 +59,15 @@ const Navbar = () => {
 
                 {/* CTA Button */}
                 <div className="d-none d-lg-block">
-                    <Link to="/events" className="btn btn-ticket rounded-pill px-4 py-2 fw-bold text-white">
-                        <i className="bi bi-ticket-perforated-fill me-2"></i> Ticket
-                    </Link>
+                    {isLoggedIn ? (
+                        <button onClick={handleLogout} className="btn btn-outline-danger rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2">
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>logout</span> Logout
+                        </button>
+                    ) : (
+                        <Link to="/login" className="btn btn-ticket rounded-pill px-4 py-2 fw-bold text-white">
+                            <i className="bi bi-person-fill me-2"></i> Login
+                        </Link>
+                    )}
                 </div>
             </div>
         </nav>

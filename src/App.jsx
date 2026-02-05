@@ -29,14 +29,15 @@ import "./App.css";
 // Layout component to handle conditional Navbar rendering
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith("/admin") ||
+  const hideNavbar = location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/users") ||
-    location.pathname === "/login";
+    location.pathname === "/login" ||
+    location.pathname === "/";
 
   return (
     <>
-      {!isAdminRoute && <Navbar />}
-      <div className={isAdminRoute ? "container mt-4" : "public-content-wrapper"}>
+      {!hideNavbar && <Navbar />}
+      <div className={hideNavbar ? "container mt-4" : "public-content-wrapper"}>
         {children}
       </div>
     </>
@@ -48,7 +49,8 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes with Layout */}
-        <Route path="/" element={<Layout><LandingPage /></Layout>} />
+        <Route path="/" element={<Layout><LoginPage /></Layout>} />
+        <Route path="/user" element={<Layout><LandingPage /></Layout>} />
         <Route path="/events" element={<Layout><EventListing /></Layout>} />
         <Route path="/events/:id" element={<Layout><EventDetails /></Layout>} />
         <Route path="/booking/:id" element={<Layout><BookingPage /></Layout>} />

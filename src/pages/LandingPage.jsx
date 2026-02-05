@@ -9,6 +9,7 @@ const LandingPage = () => {
     const [places, setPlaces] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("");
     const [selectedPlace, setSelectedPlace] = useState("");
+    const [selectedDate, setSelectedDate] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,15 +22,22 @@ const LandingPage = () => {
                 getAllCategories(),
                 getAllPlaces(),
             ]);
-            setCategories(catRes.data.data || []);
-            setPlaces(placeRes.data.data || []);
+
+            console.log("Categories Raw:", catRes.data);
+            console.log("Places Raw:", placeRes.data);
+
+            const catData = catRes.data.data || catRes.data || [];
+            const placeData = placeRes.data.data || placeRes.data || [];
+
+            setCategories(Array.isArray(catData) ? catData : []);
+            setPlaces(Array.isArray(placeData) ? placeData : []);
         } catch (error) {
             console.error("Failed to load filters", error);
         }
     };
 
     const handleSearch = () => {
-        navigate(`/events?category=${selectedCategory}&place=${selectedPlace}`);
+        navigate(`/events?category=${selectedCategory}&place=${selectedPlace}&date=${selectedDate}`);
     };
 
     return (
@@ -59,8 +67,8 @@ const LandingPage = () => {
                                         >
                                             <option value="">Select Category</option>
                                             {categories.map((cat) => (
-                                                <option key={cat.eventCategoryId} value={cat.eventCategoryId}>
-                                                    {cat.eventCategoryName}
+                                                <option key={cat.eventCategoryId || cat.EventCategoryId} value={cat.eventCategoryId || cat.EventCategoryId}>
+                                                    {cat.eventCategoryName || cat.EventCategoryName}
                                                 </option>
                                             ))}
                                         </select>
@@ -73,13 +81,21 @@ const LandingPage = () => {
                                         >
                                             <option value="">Select Place</option>
                                             {places.map((place) => (
-                                                <option key={place.placeId} value={place.placeId}>
-                                                    {place.placeName}
+                                                <option key={place.placeId || place.PlaceId} value={place.placeId || place.PlaceId}>
+                                                    {place.placeName || place.PlaceName}
                                                 </option>
                                             ))}
                                         </select>
                                     </div>
                                     <div className="col-md-3">
+                                        <input
+                                            type="date"
+                                            className="form-select border-0"
+                                            value={selectedDate}
+                                            onChange={(e) => setSelectedDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="col-md-2">
                                         <button className="btn btn-warning w-100 fw-bold" onClick={handleSearch}>
                                             Search
                                         </button>

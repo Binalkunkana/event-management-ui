@@ -10,11 +10,12 @@ const EventListing = () => {
     const [searchParams] = useSearchParams();
     const categoryId = searchParams.get("category");
     const placeId = searchParams.get("place");
+    const date = searchParams.get("date");
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchEvents();
-    }, [categoryId, placeId]);
+    }, [categoryId, placeId, date]);
 
     const fetchEvents = async () => {
         setLoading(true);
@@ -29,7 +30,16 @@ const EventListing = () => {
                 allEvents = allEvents.filter(e => e.eventCategoryId == categoryId);
             }
             if (placeId) {
-                allEvents = allEvents.filter(e => e.placeId == placeId);
+                allEvents = allEvents.filter(e => (e.placeId || e.PlaceId) == placeId);
+            }
+            if (date) {
+                // Ensure date match (handles cases where date might be in ISO or simple YYYY-MM-DD)
+                allEvents = allEvents.filter(e => {
+                    const eventStartDate = e.startDate || e.StartDate;
+                    if (!eventStartDate) return false;
+                    const eventDate = new Date(eventStartDate).toISOString().split('T')[0];
+                    return eventDate === date;
+                });
             }
 
             setEvents(allEvents);
@@ -66,16 +76,16 @@ const EventListing = () => {
                                         </div>
                                         <div className="card-body p-4">
                                             <div className="mb-2 text-primary small fw-bold text-uppercase">
-                                                {event.eventCategoryName || "Event"}
+                                                {event.eventCategoryName || event.EventCategoryName || "Event"}
                                             </div>
-                                            <h5 className="card-title fw-bold mb-3">{event.title || "Untitled Event"}</h5>
+                                            <h5 className="card-title fw-bold mb-3">{event.title || event.Title || event.details || event.Details || "Untitled Event"}</h5>
                                             <p className="card-text text-muted small mb-2">
                                                 <i className="bi bi-geo-alt me-2"></i>
-                                                {event.placeName || "Location TBD"}
+                                                {event.placeName || event.PlaceName || "Location TBD"}
                                             </p>
                                             <p className="card-text text-muted small mb-4">
                                                 <i className="bi bi-calendar3 me-2"></i>
-                                                {event.eventDate ? new Date(event.eventDate).toLocaleDateString() : "Date TBD"}
+                                                {event.startDate || event.StartDate || event.eventDate || event.EventDate ? new Date(event.startDate || event.StartDate || event.eventDate || event.EventDate).toLocaleDateString() : "Date TBD"}
                                             </p>
                                             <div className="d-flex gap-2">
                                                 <Link to={`/events/${event.scheduleEventId}`} className="btn btn-outline-primary w-50 rounded-3 fw-bold">

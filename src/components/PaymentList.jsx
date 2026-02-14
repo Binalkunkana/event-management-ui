@@ -147,7 +147,19 @@ const PaymentList = () => {
           </p>
         </div>
 
-        <button className="btn-matdash" onClick={handleAdd}>
+        <button
+          className="btn-matdash"
+          onClick={handleAdd}
+          style={{
+            padding: "8px 16px",
+            fontSize: "14px",
+            backgroundColor: "var(--matdash-primary)",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
           <span className="material-symbols-outlined">add</span>
           Add Payment
         </button>

@@ -68,39 +68,39 @@ const CategoryList = () => {
 
   // ================= SAVE =================
   const handleSave = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const selectedUser = users.find(u => u.userId === Number(formData.userId));
-    if (!selectedUser) {
-      alert("Please select a valid user.");
-      return;
+      const selectedUser = users.find(u => u.userId === Number(formData.userId));
+      if (!selectedUser) {
+        alert("Please select a valid user.");
+        return;
+      }
+
+      const payload = {
+        eventCategoryName: formData.eventCategoryName,
+        eventCategoryDescription: formData.eventCategoryDescription,
+        userId: Number(formData.userId),
+        Role: selectedUser.role // Admin or Organizer
+      };
+
+      if (mode === "add") {
+        await createCategory(payload);
+        alert("Category added successfully!");
+      } else {
+        await updateCategory(editingCategory.eventCategoryId, payload);
+        alert("Category updated successfully!");
+      }
+
+      setEditSidebarOpen(false);
+      fetchCategories();
+    } catch (error) {
+      console.error("SAVE ERROR:", error.response || error);
+      alert(error.response?.data?.title || "Save failed");
+    } finally {
+      setLoading(false);
     }
-
-    const payload = {
-      eventCategoryName: formData.eventCategoryName,
-      eventCategoryDescription: formData.eventCategoryDescription,
-      userId: Number(formData.userId),
-      Role: selectedUser.role // Admin or Organizer
-    };
-
-    if (mode === "add") {
-      await createCategory(payload);
-      alert("Category added successfully!");
-    } else {
-      await updateCategory(editingCategory.eventCategoryId, payload);
-      alert("Category updated successfully!");
-    }
-
-    setEditSidebarOpen(false);
-    fetchCategories();
-  } catch (error) {
-    console.error("SAVE ERROR:", error.response || error);
-    alert(error.response?.data?.title || "Save failed");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   // ================= DELETE =================
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
@@ -136,6 +136,15 @@ const CategoryList = () => {
               userId: ""
             });
             setEditSidebarOpen(true);
+          }}
+          style={{
+            padding: "8px 16px",
+            fontSize: "14px",
+            backgroundColor: "var(--matdash-primary)",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
           }}
         >
           <span className="material-symbols-outlined">add</span>
@@ -210,16 +219,16 @@ const CategoryList = () => {
           />
 
           <select name="userId" value={formData.userId} onChange={handleInputChange}>
-  <option value="">Select User</option>
+            <option value="">Select User</option>
 
-  {users
-    .filter(u => u.role === "Admin" || u.role === "Organizer")
-    .map((u) => (
-      <option key={u.userId} value={u.userId}>
-        {u.firstName} {u.lastName} ({u.role})
-      </option>
-    ))}
-</select>
+            {users
+              .filter(u => u.role === "Admin" || u.role === "Organizer")
+              .map((u) => (
+                <option key={u.userId} value={u.userId}>
+                  {u.firstName} {u.lastName} ({u.role})
+                </option>
+              ))}
+          </select>
         </div>
       </EditSidebar>
     </div>

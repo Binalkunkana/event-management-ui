@@ -28,6 +28,7 @@ const ScheduleEventList = () => {
         UserId: ''
     });
     const [loading, setLoading] = useState(false);
+    const [viewMode, setViewMode] = useState("card"); // "table" | "card"
 
     const formatDate = (dateStr) => {
         if (!dateStr) return "-";
@@ -84,7 +85,13 @@ const ScheduleEventList = () => {
                 userId: e.userId || e.UserId
             }));
 
-            setEvents(normalizedData);
+            // Filter to show only events assigned to organizers (optional, but requested "display only organizer information")
+            const organizerEvents = normalizedData.filter(e => {
+                const user = users.find(u => u.userId === e.userId);
+                return user?.role?.toLowerCase() === "organizer";
+            });
+
+            setEvents(organizerEvents.length > 0 ? organizerEvents : normalizedData);
         } catch (error) {
             console.error("Failed to fetch scheduled events", error);
         }
@@ -288,87 +295,307 @@ const ScheduleEventList = () => {
                         Manage event schedule
                     </p>
                 </div>
-                <button
-                    className="btn-matdash btn-matdash-primary"
-                    onClick={handleAdd}
-                    style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                    <span className="material-symbols-outlined">event_available</span>
-                    Add Event
-                </button>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="view-toggle" style={{
+                        display: 'flex',
+                        backgroundColor: 'var(--matdash-bg-light)',
+                        padding: '4px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--matdash-border)'
+                    }}>
+                        <button
+                            onClick={() => setViewMode('table')}
+                            style={{
+                                padding: '6px 12px',
+                                border: 'none',
+                                borderRadius: '6px',
+                                backgroundColor: viewMode === 'table' ? 'white' : 'transparent',
+                                color: viewMode === 'table' ? 'var(--matdash-primary)' : 'var(--matdash-text-muted)',
+                                boxShadow: viewMode === 'table' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>table_rows</span>
+                        </button>
+                        <button
+                            onClick={() => setViewMode('card')}
+                            style={{
+                                padding: '6px 12px',
+                                border: 'none',
+                                borderRadius: '6px',
+                                backgroundColor: viewMode === 'card' ? 'white' : 'transparent',
+                                color: viewMode === 'card' ? 'var(--matdash-primary)' : 'var(--matdash-text-muted)',
+                                boxShadow: viewMode === 'card' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>grid_view</span>
+                        </button>
+                    </div>
+                    <button
+                        className="btn-matdash"
+                        onClick={handleAdd}
+                        style={{
+                            padding: '8px 16px',
+                            fontSize: '14px',
+                            backgroundColor: 'var(--matdash-primary)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}
+                    >
+                        <span className="material-symbols-outlined">event_available</span>
+                        Add Event
+                    </button>
+                </div>
             </div>
 
-            {/* TABLE */}
-            <div className="matdash-card" style={{ padding: 0, overflow: 'hidden' }}>
-                <table className="matdash-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Event Details</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Fees</th>
-                            <th>Place Name</th>
-                            <th>Category Name</th>
-                            <th>Organizer Name</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {events.length === 0 ? (
-                            <tr>
-                                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: 'var(--matdash-text-muted)' }}>
-                                    No events found
-                                </td>
-                            </tr>
-                        ) : (
-                            events.map((e) => (
-                                <tr key={e.scheduleEventId}>
-                                    <td>{e.scheduleEventId}</td>
-                                    <td><div style={{ fontWeight: '600', color: 'var(--matdash-text-dark)', marginBottom: '4px' }}>{e.details || "No Details"}</div></td>
-                                    <td>{formatDate(e.startDate)}</td>
-                                    <td>{formatDate(e.endDate)}</td>
-                                    <td><strong>₹{e.fees}</strong></td>
-                                    <td>{e.placeName || places.find(p => (p.placeId || p.PlaceId) === e.placeId)?.placeName || e.placeId || "-"}</td>
-                                    <td>
-                                        <span className="matdash-badge info">
-                                            {e.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId) === e.eventCategoryId)?.eventCategoryName || e.eventCategoryId || "-"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {users.find(u => u.userId === e.userId)?.firstName ? `${users.find(u => u.userId === e.userId).firstName} ${users.find(u => u.userId === e.userId).lastName}` : (e.userId || "-")}
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                className="btn-matdash btn-matdash-outline"
-                                                style={{ padding: '6px 12px', fontSize: '13px' }}
-                                                onClick={() => handleEdit(e.scheduleEventId)}
-                                                title="Edit Event"
-                                            >
-                                                <span className="material-symbols-outlined">edit_square</span>
-                                            </button>
-                                            <button
-                                                className="btn-matdash"
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    fontSize: '13px',
-                                                    backgroundColor: 'var(--matdash-danger)',
-                                                    color: 'white'
-                                                }}
-                                                onClick={() => handleDelete(e.scheduleEventId)}
-                                                title="Delete Event"
-                                            >
-                                                <span className="material-symbols-outlined">delete_forever</span>
-                                            </button>
+            {/* VIEW MODES */}
+            {viewMode === 'card' ? (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                    gap: '24px'
+                }}>
+                    {events.map((e, index) => {
+                        const accentColors = ['#9c27b0', '#4caf50', '#ff9800', '#f44336', '#2196f3'];
+                        const accentColor = accentColors[index % accentColors.length];
+
+                        return (
+                            <div key={e.scheduleEventId} className="event-card" style={{
+                                backgroundColor: 'white',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                borderLeft: `6px solid ${accentColor}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                position: 'relative',
+                                transition: 'transform 0.2s ease',
+                                cursor: 'default'
+                            }}>
+                                {/* Card Header with Event Name and Actions */}
+                                <div style={{
+                                    padding: '16px 24px 8px 24px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                    gap: '12px'
+                                }}>
+                                    <div style={{ flex: 1 }}>
+                                        <h4 style={{
+                                            margin: 0,
+                                            fontSize: '18px',
+                                            fontWeight: '700',
+                                            color: 'var(--matdash-text-dark)',
+                                            lineHeight: '1.3'
+                                        }}>
+                                            {e.details || "Unnamed Event"}
+                                        </h4>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                        <button
+                                            onClick={() => handleEdit(e.scheduleEventId)}
+                                            style={{
+                                                background: '#f8f9fa',
+                                                border: '1px solid #e9ecef',
+                                                color: '#495057',
+                                                cursor: 'pointer',
+                                                padding: '6px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}
+                                            title="Edit"
+                                        >
+                                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(e.scheduleEventId)}
+                                            style={{
+                                                background: '#fff5f5',
+                                                border: '1px solid #ffe3e3',
+                                                color: '#fa5252',
+                                                cursor: 'pointer',
+                                                padding: '6px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center'
+                                            }}
+                                            title="Delete"
+                                        >
+                                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', padding: '12px 24px 24px 24px' }}>
+                                    {/* Left Section: Price & Date */}
+                                    <div style={{
+                                        flex: '0 0 90px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'center',
+                                        borderRight: '1px solid #f0f0f0',
+                                        paddingRight: '12px'
+                                    }}>
+                                        <div>
+                                            <span style={{ fontSize: '24px', fontWeight: '700', color: '#1a1a1a' }}>₹{e.fees}</span>
                                         </div>
+                                        <div style={{ marginTop: '8px' }}>
+                                            <div style={{ fontSize: '11px', fontWeight: '700', color: accentColor, textTransform: 'uppercase', marginBottom: '2px' }}>
+                                                {formatDate(e.startDate) === formatDate(new Date().toISOString()) ? 'TODAY' : formatDate(e.startDate)}
+                                            </div>
+                                            <div style={{ fontSize: '13px', fontWeight: '500', color: '#666' }}>{e.startTimePart}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Middle Section: Path / Location */}
+                                    <div style={{ flex: 1, paddingLeft: '16px', display: 'flex', gap: '10px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '4px 0' }}>
+                                            <div style={{ width: '6.5px', height: '6.5px', borderRadius: '50%', border: `1.5px solid ${accentColor}` }}></div>
+                                            <div style={{ flex: 1, width: '0', borderLeft: `1.5px dotted #ccc`, margin: '4px 0' }}></div>
+                                            <div style={{ width: '6.5px', height: '6.5px', borderRadius: '50%', border: `1.5px solid ${accentColor}` }}></div>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '2px 0' }}>
+                                            <div>
+                                                <div style={{ fontSize: '10px', color: '#adb5bd', fontWeight: '700', textTransform: 'uppercase', marginBottom: '3px' }}>LOCATION</div>
+                                                <div style={{ fontSize: '13px', color: '#495057', fontWeight: '600' }}>{e.placeName || places.find(p => (p.placeId || p.PlaceId) === e.placeId)?.placeName || "Not set"}</div>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '10px', color: '#adb5bd', fontWeight: '700', textTransform: 'uppercase', marginBottom: '3px' }}>DURATION</div>
+                                                <div style={{ fontSize: '12px', color: '#868e96' }}>Ends {formatDate(e.endDate)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Footer Stats */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr 1fr',
+                                    padding: '16px 24px',
+                                    backgroundColor: '#fafafa',
+                                    borderTop: '1px solid #f0f0f0'
+                                }}>
+                                    <div>
+                                        <div style={{ fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>CONTACT</div>
+                                        <div style={{ fontSize: '13px', color: '#444', fontWeight: '600' }}>{e.contactName || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>PHONE</div>
+                                        <div style={{ fontSize: '13px', color: '#444', fontWeight: '600' }}>{e.phone || "-"}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '10px', color: '#999', fontWeight: '700', textTransform: 'uppercase', marginBottom: '4px' }}>CATEGORY</div>
+                                        <div style={{
+                                            fontSize: '12px',
+                                            color: accentColor,
+                                            fontWeight: '700',
+                                            backgroundColor: `${accentColor}15`,
+                                            padding: '2px 8px',
+                                            borderRadius: '4px',
+                                            display: 'inline-block'
+                                        }}>
+                                            {e.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId) === e.eventCategoryId)?.eventCategoryName || "-"}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="matdash-card" style={{ padding: 0, overflowX: 'auto' }}>
+                    <table className="matdash-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Event Details</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Fees</th>
+                                <th>Place</th>
+                                <th>Category</th>
+                                <th>Contact</th>
+                                <th>Phone</th>
+                                <th>Organizer</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {events.length === 0 ? (
+                                <tr>
+                                    <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: 'var(--matdash-text-muted)' }}>
+                                        No scheduled events found
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            ) : (
+                                events.map((e) => (
+                                    <tr key={e.scheduleEventId}>
+                                        <td>{e.scheduleEventId}</td>
+                                        <td><div style={{ fontWeight: '600', color: 'var(--matdash-text-dark)', marginBottom: '4px' }}>{e.details || "No Details"}</div></td>
+                                        <td>
+                                            {formatDate(e.startDate)}<br />
+                                            <small style={{ color: 'var(--matdash-text-muted)' }}>{e.startTimePart || "00:00"}</small>
+                                        </td>
+                                        <td>
+                                            {formatDate(e.endDate)}<br />
+                                            <small style={{ color: 'var(--matdash-text-muted)' }}>{e.endTimePart || "00:00"}</small>
+                                        </td>
+                                        <td><strong>₹{e.fees}</strong></td>
+                                        <td>{e.placeName || places.find(p => (p.placeId || p.PlaceId) === e.placeId)?.placeName || "-"}</td>
+                                        <td>
+                                            <span className="matdash-badge info">
+                                                {e.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId) === e.eventCategoryId)?.eventCategoryName || "-"}
+                                            </span>
+                                        </td>
+                                        <td>{e.contactName || "-"}</td>
+                                        <td>{e.phone || "-"}</td>
+                                        <td>
+                                            {users.find(u => u.userId === e.userId)?.firstName
+                                                ? `${users.find(u => u.userId === e.userId).firstName} ${users.find(u => u.userId === e.userId).lastName}`
+                                                : (e.userId || "-")}
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                    className="btn-matdash btn-matdash-outline"
+                                                    style={{ padding: '6px 12px', fontSize: '13px' }}
+                                                    onClick={() => handleEdit(e.scheduleEventId)}
+                                                    title="Edit Event"
+                                                >
+                                                    <span className="material-symbols-outlined">edit_square</span>
+                                                </button>
+                                                <button
+                                                    className="btn-matdash"
+                                                    style={{
+                                                        padding: '6px 12px',
+                                                        fontSize: '13px',
+                                                        backgroundColor: 'var(--matdash-danger)',
+                                                        color: 'white'
+                                                    }}
+                                                    onClick={() => handleDelete(e.scheduleEventId)}
+                                                    title="Delete Event"
+                                                >
+                                                    <span className="material-symbols-outlined">delete_forever</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {/* EDIT SIDEBAR */}
             <EditSidebar
@@ -531,7 +758,7 @@ const ScheduleEventList = () => {
                         >
                             <option value="">Select User</option>
                             {users
-                                .filter(u => u.role?.toLowerCase() === "admin" || u.role?.toLowerCase() === "organizer")
+                                .filter(u => u.role?.toLowerCase() === "organizer")
                                 .map(u => (
                                     <option key={u.userId} value={u.userId}>
                                         {u.firstName} {u.lastName} ({u.role})

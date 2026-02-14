@@ -23,6 +23,9 @@ import PaymentForm from "./components/PaymentForm";
 import CategoryForm from "./components/CategoryForm";
 import PlaceForm from "./components/PlaceForm";
 import ScheduleEventForm from "./components/ScheduleEventForm";
+import OrganizerLayout from "./components/OrganizerLayout";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
+import OrganizerScheduleEventList from "./pages/OrganizerScheduleEventList";
 
 import "./App.css";
 
@@ -30,6 +33,7 @@ import "./App.css";
 const Layout = ({ children }) => {
   const location = useLocation();
   const hideNavbar = location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/organizer") ||
     location.pathname.startsWith("/users") ||
     location.pathname === "/login" ||
     location.pathname === "/";
@@ -77,6 +81,10 @@ function App() {
         <Route path="/admin/events-list" element={<AdminLayout><ScheduleEventList /></AdminLayout>} />
         <Route path="/admin/events/add" element={<AdminLayout><ScheduleEventForm /></AdminLayout>} />
         <Route path="/admin/events/edit/:id" element={<AdminLayout><ScheduleEventForm /></AdminLayout>} />
+
+        {/* Organizer Routes */}
+        <Route path="/organizer" element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
+        <Route path="/organizer/events" element={<OrganizerLayout><OrganizerScheduleEventList /></OrganizerLayout>} />
 
         {/* User Management */}
         <Route path="/users/add" element={<UserForm />} />

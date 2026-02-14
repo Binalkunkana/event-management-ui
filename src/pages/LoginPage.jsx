@@ -47,8 +47,10 @@ export default function LoginPage() {
 
                 // 🎯 ROLE BASED REDIRECT
                 const lowerRole = role?.toLowerCase();
-                if (lowerRole === "admin" || lowerRole === "manager" || lowerRole === "organizer") {
+                if (lowerRole === "admin" || lowerRole === "manager") {
                     navigate("/admin");
+                } else if (lowerRole === "organizer") {
+                    navigate("/organizer");
                 } else {
                     navigate("/dashboard");
                 }

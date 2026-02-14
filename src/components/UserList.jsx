@@ -185,7 +185,7 @@ const UserList = () => {
             setEditSidebarOpen(true);
           }}
           style={{
-            padding: "10px 16px",
+            padding: "8px 16px",
             fontSize: "14px",
             backgroundColor: "var(--matdash-primary)",
             color: "white",

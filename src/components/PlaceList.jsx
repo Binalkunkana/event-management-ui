@@ -147,6 +147,15 @@ const PlaceList = () => {
             });
             setEditSidebarOpen(true);
           }}
+          style={{
+            padding: "8px 16px",
+            fontSize: "14px",
+            backgroundColor: "var(--matdash-primary)",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
         >
           <span className="material-symbols-outlined">add_location_alt</span>
           Add Place

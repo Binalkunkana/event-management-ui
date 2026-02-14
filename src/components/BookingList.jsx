@@ -303,9 +303,17 @@ const BookingList = () => {
                     </p>
                 </div>
                 <button
-                    className="btn-matdash btn-matdash-primary"
+                    className="btn-matdash"
                     onClick={handleAdd}
-                    style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    style={{
+                        padding: '8px 16px',
+                        fontSize: '14px',
+                        backgroundColor: 'var(--matdash-primary)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}
                 >
                     <span className="material-symbols-outlined">add_circle</span>
                     Add Booking

@@ -35,24 +35,21 @@ const UserDashboard = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [eventRes, catRes, placeRes] = await Promise.all([
-                getAllScheduledEvents(),
-                getAllCategories(),
-                getAllPlaces()
-            ]);
-
-            // Robust data extraction helper for .NET API responses
             const extractArray = (res) => {
                 if (!res || !res.data) return [];
-                // Check res.data.data (standard) or res.data (direct)
                 const data = res.data.data !== undefined ? res.data.data : res.data;
                 if (Array.isArray(data)) return data;
-                // Check for .NET $values wrapper
                 if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
                     return data.$values;
                 }
                 return [];
             };
+
+            const [eventRes, catRes, placeRes] = await Promise.all([
+                getAllScheduledEvents(),
+                getAllCategories(),
+                getAllPlaces()
+            ]);
 
             setEvents(extractArray(eventRes));
             setCategories(extractArray(catRes));
@@ -269,40 +266,55 @@ const UserDashboard = () => {
                             <div className="row g-4">
                                 {filteredEvents.length > 0 ? (
                                     filteredEvents.map((evt) => (
-                                        <div key={evt.scheduleEventId || evt.Id || Math.random()} className="col-lg-4 col-md-6">
-                                            <div className="card h-100 border-0 shadow-sm event-dashboard-card" style={{ borderRadius: '16px', overflow: 'hidden', transition: 'transform 0.2s' }}>
-                                                <div className="position-relative">
-                                                    <div style={{ height: '160px', backgroundColor: '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#ccc' }}>event</span>
+                                        <div key={evt.scheduleEventId || evt.Id || Math.random()} className="col-12 col-xl-6">
+                                            <div className="card h-100 border-0 shadow-sm event-dashboard-card" style={{ borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s ease', border: '1px solid #eee' }}>
+                                                <div className="row g-0 h-100">
+                                                    <div className="col-md-5">
+                                                        <div className="position-relative h-100" style={{ minHeight: '200px', backgroundColor: '#f0f2f5' }}>
+                                                            <div className="h-100 d-flex align-items-center justify-content-center">
+                                                                <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#cbd5e0' }}>event</span>
+                                                            </div>
+                                                            <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
+                                                                {Number(evt.fees || evt.Fees || 0) === 0 ? "FREE" : `₹${evt.fees || evt.Fees}`}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--theme-orange)', fontWeight: '800' }}>
-                                                        {Number(evt.fees || evt.Fees || 0) === 0 ? "FREE" : `₹${evt.fees || evt.Fees}`}
-                                                    </span>
-                                                </div>
-                                                <div className="card-body p-4">
-                                                    <div className="text-uppercase small fw-800 mb-2" style={{ color: 'var(--theme-orange)', letterSpacing: '1px' }}>
-                                                        {evt.eventCategoryName || evt.EventCategoryName || "UNCATEGORIZED"}
-                                                    </div>
-                                                    <h5 className="card-title fw-bold mb-3" style={{ height: '3rem', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                                        {evt.details || evt.Details || "Untitled Event"}
-                                                    </h5>
+                                                    <div className="col-md-7">
+                                                        <div className="card-body p-4 d-flex flex-column h-100">
+                                                            <div className="text-uppercase small fw-800 mb-2" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
+                                                                {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || "UNCATEGORIZED"}
+                                                            </div>
+                                                            <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4' }}>
+                                                                {evt.details || evt.Details || "Untitled Event"}
+                                                            </h4>
 
-                                                    <div className="d-flex align-items-center mb-2 small text-muted">
-                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>calendar_month</span>
-                                                        <span>{formatDate(evt.startDate || evt.StartDate || evt.eventDate || evt.EventDate || evt.startTime || evt.StartTime)}</span>
-                                                    </div>
-                                                    <div className="d-flex align-items-center mb-4 small text-muted">
-                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>location_on</span>
-                                                        <span className="text-truncate">{evt.placeName || evt.PlaceName || "Location TBD"}</span>
-                                                    </div>
+                                                            <div className="mt-auto">
+                                                                <div className="d-flex align-items-center mb-2 text-secondary">
+                                                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '20px' }}>calendar_month</span>
+                                                                    <span className="small fw-500">{formatDate(evt.startDate || evt.StartDate || evt.eventDate || evt.EventDate || evt.startTime || evt.StartTime)}</span>
+                                                                </div>
+                                                                <div className="d-flex align-items-center mb-4 text-secondary">
+                                                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '20px' }}>location_on</span>
+                                                                    <span className="small fw-500 text-truncate">{evt.placeName || evt.PlaceName || "Location TBD"}</span>
+                                                                </div>
 
-                                                    <button
-                                                        className="btn btn-theme w-100 fw-bold py-2 rounded-pill shadow-sm"
-                                                        onClick={() => navigate(`/booking/${evt.scheduleEventId || evt.Id}`)}
-                                                        style={{ backgroundColor: 'var(--theme-orange)', color: 'white', border: 'none' }}
-                                                    >
-                                                        Book Now
-                                                    </button>
+                                                                <button
+                                                                    className="btn btn-theme w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                                                    onClick={() => navigate(`/booking/${evt.scheduleEventId || evt.Id}`)}
+                                                                    style={{
+                                                                        backgroundColor: 'var(--theme-orange)',
+                                                                        color: 'black',
+                                                                        border: 'none',
+                                                                        fontSize: '15px',
+                                                                        letterSpacing: '0.5px'
+                                                                    }}
+                                                                >
+                                                                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>local_activity</span>
+                                                                    BOOK EVENT NOW
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -325,9 +337,6 @@ const UserDashboard = () => {
                     box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
                 }
                 .fw-800 { font-weight: 800; }
-                .btn-theme:hover {
-                    opacity: 0.9;
-                }
                 .btn-theme:active {
                     transform: scale(0.98);
                 }

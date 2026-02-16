@@ -9,19 +9,29 @@ const BookingPage = () => {
     const navigate = useNavigate();
     const [event, setEvent] = useState(null);
     const [bookingData, setBookingData] = useState({
-        userId: 0, // Should be fetched from logged in user context
-        eventId: parseInt(id),
-        ticketCount: 1,
-        totalAmount: 0
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        country: '',
+        scheduleEventId: parseInt(id),
+        totalAmount: 0,
+        idProofDocument: null
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Mock getting user ID from localStorage or Context
         const userStr = localStorage.getItem("user");
         if (userStr) {
             const user = JSON.parse(userStr);
-            setBookingData(prev => ({ ...prev, userId: user.userId || 1 }));
+            setBookingData(prev => ({
+                ...prev,
+                name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || ''),
+                email: user.email || '',
+                phone: user.phone || ''
+            }));
         }
         fetchEvent();
     }, [id]);
@@ -32,7 +42,7 @@ const BookingPage = () => {
             const evt = res.data.data;
             setEvent(evt);
             const price = Number(evt.fees || evt.Fees || 0);
-            setBookingData(prev => ({ ...prev, totalAmount: price * prev.ticketCount }));
+            setBookingData(prev => ({ ...prev, totalAmount: price }));
         } catch (error) {
             console.error("Failed to load event", error);
         } finally {
@@ -40,25 +50,42 @@ const BookingPage = () => {
         }
     };
 
-    const handleTicketChange = (e) => {
-        const count = parseInt(e.target.value);
-        if (count < 1) return;
-        const price = Number(event?.fees || event?.Fees || 0);
-        setBookingData(prev => ({
-            ...prev,
-            ticketCount: count,
-            totalAmount: price * count
-        }));
+    const handleInputChange = (e) => {
+        const { name, value, files } = e.target;
+        if (name === "idProofDocument") {
+            setBookingData(prev => ({ ...prev, [name]: files[0] }));
+        } else {
+            setBookingData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!bookingData.idProofDocument) {
+            alert("Please upload your ID proof document.");
+            return;
+        }
+
         try {
-            const res = await createBooking(bookingData);
-            const bookingId = res.data.data?.eventBookingId || res.data.data?.id || 1;
+            const formData = new FormData();
+            formData.append('Name', bookingData.name);
+            formData.append('Email', bookingData.email);
+            formData.append('Phone', bookingData.phone);
+            formData.append('Address', bookingData.address);
+            formData.append('City', bookingData.city);
+            formData.append('State', bookingData.state);
+            formData.append('Country', bookingData.country);
+            formData.append('ScheduleEventId', bookingData.scheduleEventId);
+            formData.append('IdProofDocument', bookingData.idProofDocument);
+
+            const res = await createBooking(formData);
+            const bookingId = res.data.eventBookingId || res.data.id || 1;
+            alert("Event booked successfully!");
             navigate(`/payment/${bookingId}`);
         } catch (error) {
-            alert("Booking failed: " + (error.response?.data?.message || error.message));
+            console.error("Booking Error:", error.response?.data);
+            alert("Booking failed: " + (error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : error.message)));
         }
     };
 
@@ -71,51 +98,88 @@ const BookingPage = () => {
     if (!event) return <div className="p-5 text-center">Event not found</div>;
 
     return (
-        <div className="container py-5">
-            <div className="row justify-content-center">
-                <div className="col-md-8">
-                    <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
-                        <div className="card-header p-4" style={{ backgroundColor: 'var(--theme-orange)', color: 'white' }}>
-                            <h3 className="mb-0 fw-bold">Complete Your Booking</h3>
-                        </div>
-                        <div className="card-body p-4">
+        <div className="container py-5" style={{ maxWidth: '1000px' }}>
+            <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div className="row g-0">
+                    <div className="col-lg-4" style={{ backgroundColor: 'var(--theme-orange)', color: 'white' }}>
+                        <div className="p-4 h-100 d-flex flex-column justify-content-center">
+                            <span className="material-symbols-outlined mb-3" style={{ fontSize: '48px' }}>event_available</span>
+                            <h3 className="fw-bold mb-4">Event Booking</h3>
                             <h4 className="fw-bold mb-3">{event.details || event.Details || event.title || event.Title}</h4>
-                            <div className="d-flex flex-wrap gap-4 text-muted mb-4 small">
-                                <div>
-                                    <i className="bi bi-calendar-event me-2"></i>
-                                    {new Date(event.startDate || event.StartDate || event.eventDate).toLocaleDateString()}
+
+                            <div className="mb-4">
+                                <div className="d-flex align-items-center mb-2 small opacity-75">
+                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>calendar_today</span>
+                                    {new Date(event.startDate || event.StartDate || event.eventDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
                                 </div>
-                                <div>
-                                    <i className="bi bi-clock me-2"></i>
+                                <div className="d-flex align-items-center mb-2 small opacity-75">
+                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>schedule</span>
                                     {event.startTime || event.StartTime || "TBD"}
                                 </div>
-                                <div>
-                                    <i className="bi bi-geo-alt me-2"></i>
+                                <div className="d-flex align-items-center small opacity-75">
+                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>pin_drop</span>
                                     {event.placeName || event.PlaceName || "Location TBD"}
                                 </div>
                             </div>
 
+                            <div className="mt-auto pt-4 border-top border-white border-opacity-25">
+                                <div className="small opacity-75 mb-1">Total Event Fee</div>
+                                <div className="h3 fw-bold mb-0">₹{event.fees || event.Fees || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-lg-8">
+                        <div className="card-body p-4 p-md-5">
+                            <h3 className="fw-bold mb-4" style={{ color: '#2d3748' }}>Organizer Information</h3>
+
                             <form onSubmit={handleSubmit}>
-                                <div className="mb-4">
-                                    <label className="form-label fw-bold">Number of Tickets</label>
-                                    <input
-                                        type="number"
-                                        className="form-control form-control-lg border-light shadow-none"
-                                        value={bookingData.ticketCount}
-                                        onChange={handleTicketChange}
-                                        min="1"
-                                        style={{ borderRadius: '12px', backgroundColor: '#f8f9fa' }}
-                                    />
+                                <div className="row g-3 mb-4">
+                                    <div className="col-md-6">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">Full Name</label>
+                                        <input type="text" name="name" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.name} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">Email Address</label>
+                                        <input type="email" name="email" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.email} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
+                                        <input type="tel" name="phone" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.phone} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-6">
+                                        {/* Spacer to keep layout balanced */}
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">Residential Address</label>
+                                        <input type="text" name="address" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.address} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">City</label>
+                                        <input type="text" name="city" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.city} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">State</label>
+                                        <input type="text" name="state" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.state} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-md-4">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">Country</label>
+                                        <input type="text" name="country" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.country} onChange={handleInputChange} />
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label small fw-bold text-muted text-uppercase">ID Proof Document (PDF/JPG/PNG)</label>
+                                        <input type="file" name="idProofDocument" accept=".pdf,.jpg,.jpeg,.png" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} onChange={handleInputChange} />
+                                    </div>
                                 </div>
 
-                                <div className="d-flex justify-content-between align-items-center mb-4 p-3 rounded-3" style={{ backgroundColor: '#fff8f4' }}>
-                                    <span className="h5 mb-0 fw-bold">Total Amount</span>
-                                    <span className="h3 mb-0 fw-bold" style={{ color: 'var(--theme-orange)' }}>₹{bookingData.totalAmount}</span>
+                                <div className="d-flex justify-content-between align-items-center mb-4 p-4 rounded-4" style={{ backgroundColor: '#f8f9fa', border: '1px dashed #cbd5e0' }}>
+                                    <div>
+                                        <div className="small text-muted text-uppercase fw-bold">Total Payable</div>
+                                        <div className="h2 mb-0 fw-bold" style={{ color: 'var(--theme-orange)' }}>₹{bookingData.totalAmount}</div>
+                                    </div>
+                                    <button type="submit" className="btn btn-theme btn-lg px-5 fw-bold py-3 rounded-pill shadow" style={{ backgroundColor: 'var(--theme-orange)', color: 'black', border: 'none' }}>
+                                        CONFIRM BOOKING
+                                    </button>
                                 </div>
-
-                                <button type="submit" className="btn btn-theme btn-lg w-100 fw-bold py-3 shadow-sm rounded-pill" style={{ backgroundColor: 'var(--theme-orange)', color: 'white', border: 'none' }}>
-                                    Proceed to Payment
-                                </button>
                             </form>
                         </div>
                     </div>

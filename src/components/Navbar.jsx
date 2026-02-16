@@ -46,11 +46,7 @@ const Navbar = () => {
                                 <Link className="nav-link text-uppercase fw-bold text-dark" to="/dashboard">My Schedule</Link>
                             </li>
                         )}
-                        {(role === "admin" || role === "organizer" || role === "manager") && (
-                            <li className="nav-item">
-                                <Link className="nav-link text-uppercase fw-bold text-danger" to="/admin">Admin Panel</Link>
-                            </li>
-                        )}
+
                         <li className="nav-item">
                             <a className="nav-link text-uppercase fw-bold text-dark" href="#">Contacts</a>
                         </li>

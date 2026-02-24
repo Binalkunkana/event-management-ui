@@ -9,6 +9,7 @@ import EventListing from "./pages/EventListing";
 import EventDetails from "./pages/EventDetails";
 import BookingPage from "./pages/BookingPage";
 import PaymentPage from "./pages/PaymentPage";
+import ReceiptPage from "./pages/ReceiptPage";
 import Navbar from "./components/Navbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLayout from "./components/AdminLayout";
@@ -59,6 +60,7 @@ function App() {
         <Route path="/events/:id" element={<Layout><EventDetails /></Layout>} />
         <Route path="/booking/:id" element={<Layout><BookingPage /></Layout>} />
         <Route path="/payment/:bookingId" element={<Layout><PaymentPage /></Layout>} />
+        <Route path="/receipt/:bookingId" element={<Layout><ReceiptPage /></Layout>} />
         <Route path="/dashboard" element={<Layout><UserDashboard /></Layout>} />
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
 

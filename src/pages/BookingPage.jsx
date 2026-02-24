@@ -18,7 +18,9 @@ const BookingPage = () => {
         country: '',
         scheduleEventId: parseInt(id),
         totalAmount: 0,
-        idProofDocument: null
+        idProofDocument: null,
+        isCancelled: false,
+        cancellationDateTime: null
     });
     const [loading, setLoading] = useState(true);
 
@@ -78,6 +80,10 @@ const BookingPage = () => {
             formData.append('Country', bookingData.country);
             formData.append('ScheduleEventId', bookingData.scheduleEventId);
             formData.append('IdProofDocument', bookingData.idProofDocument);
+            formData.append('IsCancelled', bookingData.isCancelled);
+            if (bookingData.cancellationDateTime) {
+                formData.append('CancellationDateTime', bookingData.cancellationDateTime);
+            }
 
             const res = await createBooking(formData);
             const bookingId = res.data.eventBookingId || res.data.id || 1;

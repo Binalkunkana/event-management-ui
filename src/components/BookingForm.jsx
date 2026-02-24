@@ -17,6 +17,7 @@ const BookingForm = () => {
     city: "",
     scheduleEventId: "",
     isCancelled: false,
+    cancellationDateTime: "",
     idProofDocument: null
   });
 
@@ -47,6 +48,7 @@ const BookingForm = () => {
       city: data.city || "",
       scheduleEventId: data.scheduleEventId || "",
       isCancelled: data.isCancelled || false,
+      cancellationDateTime: data.cancellationDateTime || "",
       idProofDocument: null
     });
   };
@@ -73,6 +75,9 @@ const BookingForm = () => {
     formData.append("City", booking.city);
     formData.append("ScheduleEventId", booking.scheduleEventId);
     formData.append("IsCancelled", booking.isCancelled);
+    if (booking.cancellationDateTime) {
+      formData.append("CancellationDateTime", booking.cancellationDateTime);
+    }
 
     if (booking.idProofDocument) {
       formData.append("IdProofDocument", booking.idProofDocument);
@@ -127,6 +132,13 @@ const BookingForm = () => {
                   <input type="checkbox" className="form-check-input" name="isCancelled" checked={booking.isCancelled} onChange={handleChange} />
                   <label className="form-check-label">Cancelled</label>
                 </div>
+
+                {booking.isCancelled && (
+                  <div className="mb-3">
+                    <label className="form-label small fw-bold text-muted text-uppercase">Cancellation Date & Time</label>
+                    <input type="datetime-local" className="form-control" name="cancellationDateTime" value={booking.cancellationDateTime ? booking.cancellationDateTime.slice(0, 16) : ""} onChange={handleChange} />
+                  </div>
+                )}
 
                 <div className="d-grid gap-2">
                   <button type="submit" className="btn btn-primary" disabled={loading}>

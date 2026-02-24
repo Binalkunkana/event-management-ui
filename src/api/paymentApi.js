@@ -11,6 +11,10 @@ export const processPayment = (data) => {
   return axiosInstance.post(BASE_URL, data);
 };
 
+export const makePayment = (data) => {
+  return axiosInstance.post(`${BASE_URL}/make-payment`, data);
+};
+
 export const updatePayment = (id, data) => {
   return axiosInstance.patch(`${BASE_URL}/${id}`, data);
 };

@@ -43,7 +43,7 @@ const Navbar = () => {
                         </li>
                         {isLoggedIn && (
                             <li className="nav-item">
-                                <Link className="nav-link text-uppercase fw-bold text-dark" to="/dashboard">My Schedule</Link>
+                                <Link className="nav-link text-uppercase fw-bold text-dark" to="/my-bookings">My Bookings</Link>
                             </li>
                         )}
 

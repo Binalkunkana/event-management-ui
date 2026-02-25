@@ -62,6 +62,7 @@ function App() {
         <Route path="/payment/:bookingId" element={<Layout><PaymentPage /></Layout>} />
         <Route path="/receipt/:bookingId" element={<Layout><ReceiptPage /></Layout>} />
         <Route path="/dashboard" element={<Layout><UserDashboard /></Layout>} />
+        <Route path="/my-bookings" element={<Layout><UserDashboard /></Layout>} />
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
 
         {/* Admin Routes with AdminLayout */}

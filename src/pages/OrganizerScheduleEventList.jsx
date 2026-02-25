@@ -24,7 +24,9 @@ const OrganizerScheduleEventList = () => {
         EventCategoryId: '',
         Phone: '',
         ContactName: '',
-        UserId: localStorage.getItem("userId")
+        UserId: localStorage.getItem("userId"),
+        ImageFile: null,
+        ImagePath: ''
     });
     const [loading, setLoading] = useState(false);
     const currentUserId = localStorage.getItem("userId");
@@ -137,7 +139,9 @@ const OrganizerScheduleEventList = () => {
                 EventCategoryId: event.EventCategoryId || event.eventCategoryId || '',
                 Phone: event.Phone || event.phone || '',
                 ContactName: event.ContactName || event.contactName || '',
-                UserId: event.UserId || event.userId || currentUserId
+                UserId: event.UserId || event.userId || currentUserId,
+                ImageFile: null,
+                ImagePath: event.ImagePath || event.imagePath || ''
             });
             setEditSidebarOpen(true);
         } catch (error) {
@@ -153,7 +157,7 @@ const OrganizerScheduleEventList = () => {
         setFormData({
             Details: '', StartDate: '', StartTime: '', EndDate: '', EndTime: '',
             Fees: 0, PlaceId: '', EventCategoryId: '', Phone: '', ContactName: '',
-            UserId: currentUserId
+            UserId: currentUserId, ImageFile: null, ImagePath: ''
         });
         setEditSidebarOpen(true);
     };
@@ -174,35 +178,34 @@ const OrganizerScheduleEventList = () => {
                 return time.length === 5 ? `${time}:00` : time;
             };
 
-            const dataToSave = {
-                Details: formData.Details,
-                StartDate: formData.StartDate,
-                EndDate: formData.EndDate,
-                StartTime: formatTime(formData.StartTime),
-                EndTime: formatTime(formData.EndTime),
-                Fees: Number(formData.Fees),
-                ContactName: formData.ContactName,
-                Phone: formData.Phone,
-                EventCategoryId: Number(formData.EventCategoryId),
-                PlaceId: Number(formData.PlaceId),
-                UserId: Number(formData.UserId)
-            };
+            const formDataToSend = new FormData();
+            formDataToSend.append('Details', formData.Details);
+            formDataToSend.append('StartDate', formData.StartDate);
+            formDataToSend.append('EndDate', formData.EndDate);
+            formDataToSend.append('StartTime', formatTime(formData.StartTime));
+            formDataToSend.append('EndTime', formatTime(formData.EndTime));
+            formDataToSend.append('Fees', formData.Fees);
+            formDataToSend.append('ContactName', formData.ContactName);
+            formDataToSend.append('Phone', formData.Phone);
+            formDataToSend.append('EventCategoryId', formData.EventCategoryId);
+            formDataToSend.append('PlaceId', formData.PlaceId);
+            formDataToSend.append('UserId', formData.UserId);
+            formDataToSend.append('ImagePath', formData.ImagePath || ""); // Crucial to avoid NULL constraint
+
+            if (formData.ImageFile) {
+                formDataToSend.append('ImageFile', formData.ImageFile);
+            }
 
             if (mode === "edit") {
                 const id = Number(editingEvent.scheduleEventId || editingEvent.ScheduleEventId || editingEvent.id || editingEvent.Id);
+                formDataToSend.append('ScheduleEventId', id);
 
-                // Map ID variants to ensure backend binder finds it
-                dataToSave.ScheduleEventId = id;
-                dataToSave.scheduleEventId = id;
-                dataToSave.id = id;
-                dataToSave.Id = id;
-
-                console.log("Updating Event Payload:", dataToSave);
-                await updateScheduledEvent(id, dataToSave);
+                console.log("Updating Event with FormData (PascalCase)");
+                await updateScheduledEvent(id, formDataToSend);
                 alert("Event updated!");
             } else {
-                console.log("Creating Event Payload:", dataToSave);
-                await createScheduledEvent(dataToSave);
+                console.log("Creating Event with FormData (PascalCase)");
+                await createScheduledEvent(formDataToSend);
                 alert("Event created!");
             }
             setEditSidebarOpen(false);
@@ -234,8 +237,17 @@ const OrganizerScheduleEventList = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, files } = e.target;
+        if (name === "ImageFile") {
+            const file = files[0];
+            setFormData(prev => ({
+                ...prev,
+                [name]: file,
+                ImagePath: file ? file.name : prev.ImagePath // Update path preview name if file selected
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     return (
@@ -492,6 +504,22 @@ const OrganizerScheduleEventList = () => {
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--matdash-border)', fontSize: '14px' }}
                             required
                         />
+                    </div>
+
+                    <div>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', marginBottom: '8px' }}>Event Image</label>
+                        <input
+                            type="file"
+                            name="ImageFile"
+                            onChange={handleInputChange}
+                            accept="image/*"
+                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--matdash-border)', fontSize: '14px', backgroundColor: 'white' }}
+                        />
+                        {mode === "edit" && editingEvent?.imagePath && !formData.ImageFile && (
+                            <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--matdash-text-muted)' }}>
+                                Current image: {editingEvent.imagePath}
+                            </div>
+                        )}
                     </div>
 
                     <div>

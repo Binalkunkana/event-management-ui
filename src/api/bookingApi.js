@@ -4,6 +4,8 @@ const BASE_URL = "/EventBooking";
 
 export const getAllBookings = () => axiosInstance.get(BASE_URL);
 
+export const getMyBookings = () => axiosInstance.get(`${BASE_URL}/my-bookings`);
+
 export const getBookingById = (id) => axiosInstance.get(`${BASE_URL}/${id}`);
 
 export const createBooking = (data) => axiosInstance.post(BASE_URL, data);

@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getAllScheduledEvents } from '../api/eventApi';
 import { getAllCategories } from '../api/categoryApi';
 import { getAllPlaces } from '../api/placeApi';
-import { getAllBookings, updateBooking } from '../api/bookingApi';
+import { getMyBookings, updateBooking } from '../api/bookingApi';
 import { getAllPayments } from '../api/paymentApi';
 
 const UserDashboard = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [events, setEvents] = useState([]);
     const [categories, setCategories] = useState([]);
     const [places, setPlaces] = useState([]);
     const [myBookings, setMyBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' | 'past' | 'bookings'
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'upcoming'); // 'upcoming' | 'past' | 'bookings'
 
     // Input state (what user sees/types in the sidebar)
     const [filters, setFilters] = useState({
@@ -35,12 +36,21 @@ const UserDashboard = () => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        if (location.pathname === '/my-bookings') {
+            setActiveTab('bookings');
+        }
+    }, [location.pathname]);
+
     const fetchData = async () => {
         setLoading(true);
         try {
             const extractArray = (res) => {
                 if (!res || !res.data) return [];
-                const data = res.data.data !== undefined ? res.data.data : res.data;
+                // Check res.data.data, res.data.Data, or just res.data if it's an array
+                let data = res.data.data !== undefined ? res.data.data : res.data.Data;
+                if (data === undefined) data = res.data;
+
                 if (Array.isArray(data)) return data;
                 if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
                     return data.$values;
@@ -52,7 +62,7 @@ const UserDashboard = () => {
                 getAllScheduledEvents(),
                 getAllCategories(),
                 getAllPlaces(),
-                getAllBookings().catch(() => ({ data: { data: [] } })),
+                getMyBookings().catch(() => ({ data: { data: [] } })),
                 getAllPayments().catch(() => ({ data: { data: [] } }))
             ]);
 
@@ -75,9 +85,8 @@ const UserDashboard = () => {
             setCategories(extractArray(catRes));
             setPlaces(extractArray(placeRes));
 
-            // Filter bookings for current logged in user AND check for successful payment
-            const userEmail = localStorage.getItem("email") || JSON.parse(localStorage.getItem("user") || "{}").email;
-            const allBookings = extractArray(bookingRes);
+            // The backend now only returns bookings for the logged-in user
+            const userBookingsRaw = extractArray(bookingRes);
             const allPayments = extractArray(paymentRes);
 
             // Create a set of booking IDs that have a successful payment
@@ -90,18 +99,27 @@ const UserDashboard = () => {
                     .map(p => String(p.eventBookingId || p.EventBookingId))
             );
 
-            const userBookings = allBookings.filter(b => {
-                const bEmail = (b.email || b.Email || "").toLowerCase();
-                const isMyBooking = bEmail === (userEmail || "").toLowerCase();
+            const userBookings = userBookingsRaw.map(b => {
                 const bId = String(b.eventBookingId || b.EventBookingId || b.id || b.Id);
-                const isPaid = paidBookingIds.has(bId);
-                return isMyBooking && isPaid;
-            }).map(b => ({
-                ...b,
-                eventBookingId: b.eventBookingId || b.EventBookingId || b.id || b.Id,
-                scheduleEventId: b.scheduleEventId || b.ScheduleEventId,
-                isCancelled: b.isCancelled || b.IsCancelled || false
-            }));
+                return {
+                    ...b,
+                    eventBookingId: bId,
+                    scheduleEventId: b.scheduleEventId || b.ScheduleEventId,
+                    name: b.name || b.Name,
+                    email: b.email || b.Email,
+                    phone: b.phone || b.Phone,
+                    address: b.address || b.Address,
+                    city: b.city || b.City,
+                    state: b.state || b.State,
+                    country: b.country || b.Country,
+                    scheduleEventDetails: b.scheduleEventDetails || b.ScheduleEventDetails,
+                    scheduleEventFees: b.scheduleEventFees || b.ScheduleEventFees,
+                    idProofDocumentPath: b.idProofDocumentPath || b.IdProofDocumentPath,
+                    isCancelled: b.isCancelled === true || b.IsCancelled === true,
+                    cancellationDateTime: b.cancellationDateTime || b.CancellationDateTime,
+                    isPaid: paidBookingIds.has(bId)
+                };
+            });
 
             setMyBookings(userBookings);
         } catch (err) {
@@ -365,49 +383,100 @@ const UserDashboard = () => {
                                     myBookings.map((bk) => {
                                         const event = events.find(e => e.scheduleEventId == bk.scheduleEventId);
                                         return (
-                                            <div key={bk.eventBookingId} className="col-12">
-                                                <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
-                                                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                                        <div className="d-flex align-items-center gap-3">
-                                                            <div className="bg-light p-3 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                                                <span className="material-symbols-outlined text-warning" style={{ fontSize: '32px' }}>local_activity</span>
-                                                            </div>
-                                                            <div>
-                                                                <h5 className="mb-1 fw-bold">{event?.details || "Event Details Unavailable"}</h5>
-                                                                <div className="small text-muted d-flex align-items-center gap-2">
-                                                                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>calendar_month</span>
-                                                                    {event ? formatDate(event.startDate) : "TBD"}
-                                                                </div>
-                                                                <div className="badge mt-2" style={{ backgroundColor: bk.isCancelled ? '#fee2e2' : '#dcfce7', color: bk.isCancelled ? '#991b1b' : '#166534' }}>
-                                                                    {bk.isCancelled ? 'CANCELLED' : 'ACTIVE'}
-                                                                </div>
+                                            <div key={bk.eventBookingId} className="col-12 col-xl-6">
+                                                <div className="card h-100 border-0 shadow-sm event-dashboard-card" style={{ borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s ease', border: '1px solid #eee' }}>
+                                                    <div className="row g-0 h-100">
+                                                        <div className="col-md-5">
+                                                            <div className="position-relative h-100" style={{ minHeight: '200px', backgroundColor: '#f0f2f5' }}>
+                                                                {event?.imagePath ? (
+                                                                    <img
+                                                                        src={`https://localhost:7187/EventImages/${event.imagePath}`}
+                                                                        alt={event.details || 'Event'}
+                                                                        className="w-100 h-100 object-fit-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.src = 'https://via.placeholder.com/400x300?text=Event+Image';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="h-100 d-flex align-items-center justify-content-center">
+                                                                        <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#cbd5e0' }}>event</span>
+                                                                    </div>
+                                                                )}
+                                                                <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
+                                                                    ₹{bk.scheduleEventFees || bk.ScheduleEventFees || event?.fees || 0}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        <div className="text-end">
-                                                            <div className="fw-bold fs-5 mb-2">₹{bk.scheduleEventFees || bk.ScheduleEventFees || event?.fees || 0}</div>
-                                                            <div className="d-flex gap-2">
-                                                                {!bk.isCancelled && (
-                                                                    <button
-                                                                        className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold"
-                                                                        onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}
-                                                                    >
-                                                                        View Receipt
-                                                                    </button>
-                                                                )}
-                                                                {!bk.isCancelled && (
-                                                                    <button
-                                                                        className="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold"
-                                                                        onClick={() => handleCancelBooking(bk)}
-                                                                    >
-                                                                        Cancel Booking
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                            {bk.isCancelled && bk.cancellationDateTime && (
-                                                                <div className="small text-muted" style={{ fontSize: '11px' }}>
-                                                                    Cancelled on: {new Date(bk.cancellationDateTime).toLocaleDateString()}
+                                                        <div className="col-md-7">
+                                                            <div className="card-body p-4 d-flex flex-column h-100">
+                                                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                                                    <div className="text-uppercase small fw-800" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
+                                                                        {event?.eventCategoryName || bk.ScheduleEventCategory || "BOOKED EVENT"}
+                                                                    </div>
+                                                                    <div className="d-flex flex-column gap-1 align-items-end">
+                                                                        <span className="badge" style={{ backgroundColor: bk.isCancelled ? '#fee2e2' : '#dcfce7', color: bk.isCancelled ? '#991b1b' : '#166534', fontSize: '10px' }}>
+                                                                            {bk.isCancelled ? 'CANCELLED' : 'ACTIVE'}
+                                                                        </span>
+                                                                        {!bk.isCancelled && (
+                                                                            <span className="badge" style={{ backgroundColor: bk.isPaid ? '#dcfce7' : '#fef3c7', color: bk.isPaid ? '#166534' : '#92400e', fontSize: '10px' }}>
+                                                                                {bk.isPaid ? 'PAID' : 'PENDING'}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            )}
+                                                                <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4', fontSize: '1.1rem' }}>
+                                                                    {event?.details || bk.scheduleEventDetails || "Untitled Event"}
+                                                                </h4>
+
+                                                                <div className="mb-3">
+                                                                    <div className="d-flex align-items-center mb-1 text-secondary">
+                                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>calendar_month</span>
+                                                                        <span className="small fw-500">{event ? formatDate(event.startDate) : "Date TBD"}</span>
+                                                                    </div>
+                                                                    <div className="d-flex align-items-center text-secondary">
+                                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>location_on</span>
+                                                                        <span className="small fw-500 text-truncate">{event?.placeName || "Location TBD"}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="mt-auto pt-3 border-top">
+                                                                    <div className="d-flex gap-2 flex-wrap">
+                                                                        {!bk.isCancelled && bk.isPaid && (
+                                                                            <button
+                                                                                className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold flex-grow-1"
+                                                                                onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}
+                                                                            >
+                                                                                Receipt
+                                                                            </button>
+                                                                        )}
+                                                                        {!bk.isCancelled && !bk.isPaid && (
+                                                                            <button
+                                                                                className="btn btn-warning btn-sm rounded-pill px-3 fw-bold flex-grow-1"
+                                                                                onClick={() => navigate(`/payment/${bk.eventBookingId}`)}
+                                                                                style={{ backgroundColor: 'var(--theme-orange)', border: 'none', color: 'black' }}
+                                                                            >
+                                                                                Pay Now
+                                                                            </button>
+                                                                        )}
+                                                                        {!bk.isCancelled && (
+                                                                            <button
+                                                                                className="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold flex-grow-1"
+                                                                                onClick={() => handleCancelBooking(bk)}
+                                                                            >
+                                                                                Cancel
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    {bk.isCancelled && bk.cancellationDateTime && (
+                                                                        <div className="mt-2 text-center">
+                                                                            <span className="text-muted" style={{ fontSize: '10px' }}>
+                                                                                Cancelled on: {new Date(bk.cancellationDateTime).toLocaleDateString()}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

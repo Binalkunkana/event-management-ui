@@ -447,7 +447,9 @@ const ScheduleEventList = () => {
                                         paddingRight: '12px'
                                     }}>
                                         <div>
-                                            <span style={{ fontSize: '24px', fontWeight: '700', color: '#1a1a1a' }}>₹{e.fees}</span>
+                                            <span style={{ fontSize: '24px', fontWeight: '700', color: '#1a1a1a' }}>
+                                                {Number(e.fees) === 0 ? <span style={{ color: 'var(--matdash-success)' }}>FREE</span> : `₹${e.fees}`}
+                                            </span>
                                         </div>
                                         <div style={{ marginTop: '8px' }}>
                                             <div style={{ fontSize: '11px', fontWeight: '700', color: accentColor, textTransform: 'uppercase', marginBottom: '2px' }}>
@@ -550,7 +552,13 @@ const ScheduleEventList = () => {
                                             {formatDate(e.endDate)}<br />
                                             <small style={{ color: 'var(--matdash-text-muted)' }}>{e.endTimePart || "00:00"}</small>
                                         </td>
-                                        <td><strong>₹{e.fees}</strong></td>
+                                        <td>
+                                            {Number(e.fees) === 0 ? (
+                                                <span className="matdash-badge success">FREE</span>
+                                            ) : (
+                                                <strong>₹{e.fees}</strong>
+                                            )}
+                                        </td>
                                         <td>{e.placeName || places.find(p => (p.placeId || p.PlaceId) === e.placeId)?.placeName || "-"}</td>
                                         <td>
                                             <span className="matdash-badge info">

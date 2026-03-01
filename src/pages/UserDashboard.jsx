@@ -34,7 +34,7 @@ const UserDashboard = () => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (location.pathname === '/my-bookings') {
@@ -62,9 +62,11 @@ const UserDashboard = () => {
                 getAllScheduledEvents(),
                 getAllCategories(),
                 getAllPlaces(),
-                getMyBookings().catch(() => ({ data: { data: [] } })),
+                getMyBookings(),
                 getAllPayments().catch(() => ({ data: { data: [] } }))
             ]);
+
+            console.log("DEBUG: My Bookings Response", bookingRes.data);
 
             const rawEvents = extractArray(eventRes);
             const normalizedEvents = rawEvents.map(e => ({
@@ -117,13 +119,17 @@ const UserDashboard = () => {
                     idProofDocumentPath: b.idProofDocumentPath || b.IdProofDocumentPath,
                     isCancelled: b.isCancelled === true || b.IsCancelled === true,
                     cancellationDateTime: b.cancellationDateTime || b.CancellationDateTime,
-                    isPaid: paidBookingIds.has(bId)
+                    isPaid: paidBookingIds.has(bId) || Number(b.scheduleEventFees || b.ScheduleEventFees || 0) === 0
                 };
             });
 
             setMyBookings(userBookings);
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
+            if (err.response?.status === 401) {
+                localStorage.clear();
+                navigate('/login');
+            }
         } finally {
             setLoading(false);
         }
@@ -366,8 +372,20 @@ const UserDashboard = () => {
                                     </button>
                                 </li>
                             </ul>
-                            <div className="text-muted small">
-                                Showing <strong>{activeTab === 'bookings' ? myBookings.length : filteredEvents.length}</strong> {activeTab === 'bookings' ? 'bookings' : 'events'}
+                            <div className="d-flex align-items-center gap-3">
+                                <div className="text-muted small">
+                                    Logged in as: <strong style={{ color: 'var(--theme-orange)' }}>{localStorage.getItem("email") || "Guest"}</strong>
+                                </div>
+                                <div className="text-muted small">
+                                    Showing <strong>{activeTab === 'bookings' ? myBookings.length : filteredEvents.length}</strong> {activeTab === 'bookings' ? 'bookings' : 'events'}
+                                </div>
+                                <button
+                                    className="btn btn-sm btn-outline-secondary border-0 d-flex align-items-center"
+                                    onClick={fetchData}
+                                    title="Refresh Data"
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
+                                </button>
                             </div>
                         </div>
 
@@ -404,7 +422,7 @@ const UserDashboard = () => {
                                                                     </div>
                                                                 )}
                                                                 <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
-                                                                    ₹{bk.scheduleEventFees || bk.ScheduleEventFees || event?.fees || 0}
+                                                                    {Number(bk.scheduleEventFees || event?.fees || 0) === 0 ? "FREE" : `₹${bk.scheduleEventFees || event?.fees || 0}`}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -440,6 +458,11 @@ const UserDashboard = () => {
                                                                     </div>
                                                                 </div>
 
+                                                                <div className="mb-2">
+                                                                    <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '10px' }}>
+                                                                        ID: {bk.eventBookingId}
+                                                                    </span>
+                                                                </div>
                                                                 <div className="mt-auto pt-3 border-top">
                                                                     <div className="d-flex gap-2 flex-wrap">
                                                                         {!bk.isCancelled && bk.isPaid && (
@@ -516,7 +539,7 @@ const UserDashboard = () => {
                                                                 </div>
                                                             )}
                                                             <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
-                                                                ₹{evt.fees || evt.Fees || 0}
+                                                                {Number(evt.fees || evt.Fees || 0) === 0 ? "FREE" : `₹${evt.fees || evt.Fees || 0}`}
                                                             </span>
                                                         </div>
                                                     </div>

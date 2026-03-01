@@ -25,14 +25,11 @@ const BookingPage = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-            const user = JSON.parse(userStr);
+        const userEmail = localStorage.getItem("email");
+        if (userEmail) {
             setBookingData(prev => ({
                 ...prev,
-                name: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user.name || ''),
-                email: user.email || '',
-                phone: user.phone || ''
+                email: userEmail
             }));
         }
         fetchEvent();
@@ -87,8 +84,15 @@ const BookingPage = () => {
 
             const res = await createBooking(formData);
             const bookingId = res.data.eventBookingId || res.data.id || 1;
-            alert("Event booked successfully!");
-            navigate(`/payment/${bookingId}`);
+
+            const isFree = Number(event.fees || event.Fees || 0) === 0;
+            if (isFree) {
+                alert("Successfully booked an event!");
+                navigate('/my-bookings');
+            } else {
+                alert("Event booked successfully!");
+                navigate(`/payment/${bookingId}`);
+            }
         } catch (error) {
             console.error("Booking Error:", error.response?.data);
             alert("Booking failed: " + (error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : error.message)));
@@ -130,7 +134,9 @@ const BookingPage = () => {
 
                             <div className="mt-auto pt-4 border-top border-white border-opacity-25">
                                 <div className="small opacity-75 mb-1">Total Event Fee</div>
-                                <div className="h3 fw-bold mb-0">₹{event.fees || event.Fees || 0}</div>
+                                <div className="h3 fw-bold mb-0">
+                                    {Number(event.fees || event.Fees || 0) === 0 ? "FREE" : `₹${event.fees || event.Fees || 0}`}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -146,7 +152,17 @@ const BookingPage = () => {
                                     </div>
                                     <div className="col-md-6">
                                         <label className="form-label small fw-bold text-muted text-uppercase">Email Address</label>
-                                        <input type="email" name="email" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.email} onChange={handleInputChange} />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            required
+                                            className="form-control"
+                                            style={{ borderRadius: '10px', padding: '12px', backgroundColor: localStorage.getItem("email") ? '#f8f9fa' : 'white' }}
+                                            value={bookingData.email}
+                                            readOnly={!!localStorage.getItem("email")}
+                                            onChange={handleInputChange}
+                                        />
+                                        {localStorage.getItem("email") && <small className="text-muted">Linked to your account</small>}
                                     </div>
                                     <div className="col-md-6">
                                         <label className="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
@@ -180,7 +196,9 @@ const BookingPage = () => {
                                 <div className="d-flex justify-content-between align-items-center mb-4 p-4 rounded-4" style={{ backgroundColor: '#f8f9fa', border: '1px dashed #cbd5e0' }}>
                                     <div>
                                         <div className="small text-muted text-uppercase fw-bold">Total Payable</div>
-                                        <div className="h2 mb-0 fw-bold" style={{ color: 'var(--theme-orange)' }}>₹{bookingData.totalAmount}</div>
+                                        <div className="h2 mb-0 fw-bold" style={{ color: 'var(--theme-orange)' }}>
+                                            {Number(bookingData.totalAmount) === 0 ? "FREE" : `₹${bookingData.totalAmount}`}
+                                        </div>
                                     </div>
                                     <button type="submit" className="btn btn-theme btn-lg px-5 fw-bold py-3 rounded-pill shadow" style={{ backgroundColor: 'var(--theme-orange)', color: 'black', border: 'none' }}>
                                         CONFIRM BOOKING

@@ -258,13 +258,19 @@ const OrganizerScheduleEventList = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value, files } = e.target;
+        const { name, value, files, type, checked } = e.target;
         if (name === "Image") {
             const file = files[0];
             setFormData(prev => ({
                 ...prev,
                 [name]: file,
-                ImagePath: file ? file.name : prev.ImagePath // Update path preview name if file selected
+                ImagePath: file ? file.name : prev.ImagePath
+            }));
+        } else if (name === "isFree") {
+            setFormData(prev => ({
+                ...prev,
+                isFree: checked,
+                Fees: checked ? 0 : prev.Fees
             }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -331,7 +337,13 @@ const OrganizerScheduleEventList = () => {
                                         {formatDate(e.endDate)}<br />
                                         <small style={{ color: 'var(--matdash-text-muted)' }}>{e.endTimePart || "00:00"}</small>
                                     </td>
-                                    <td><strong>₹{e.fees}</strong></td>
+                                    <td>
+                                        {Number(e.fees) === 0 ? (
+                                            <span className="matdash-badge success">FREE</span>
+                                        ) : (
+                                            <strong>₹{e.fees}</strong>
+                                        )}
+                                    </td>
                                     <td>{e.placeName || places.find(p => (p.placeId || p.PlaceId) === e.placeId)?.placeName || "-"}</td>
                                     <td>
                                         <span className="matdash-badge info">
@@ -455,17 +467,31 @@ const OrganizerScheduleEventList = () => {
                             />
                         </div>
                     </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', marginBottom: '8px' }}>Fees (₹) *</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <input
-                            type="number"
-                            name="Fees"
-                            value={formData.Fees}
+                            type="checkbox"
+                            name="isFree"
+                            checked={formData.isFree || Number(formData.Fees) === 0}
                             onChange={handleInputChange}
-                            style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--matdash-border)', fontSize: '14px' }}
-                            required
+                            id="isFreeCheckbox"
                         />
+                        <label htmlFor="isFreeCheckbox" style={{ fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', cursor: 'pointer' }}>
+                            Free Event (No Fees)
+                        </label>
                     </div>
+                    {!formData.isFree && Number(formData.Fees) !== 0 && (
+                        <div>
+                            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', marginBottom: '8px' }}>Fees (₹) *</label>
+                            <input
+                                type="number"
+                                name="Fees"
+                                value={formData.Fees}
+                                onChange={handleInputChange}
+                                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--matdash-border)', fontSize: '14px' }}
+                                required={!formData.isFree}
+                            />
+                        </div>
+                    )}
                     <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', marginBottom: '8px' }}>Place Name *</label>
                         <select

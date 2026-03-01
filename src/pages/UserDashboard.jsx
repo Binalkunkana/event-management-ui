@@ -37,18 +37,29 @@ const UserDashboard = () => {
     }, [location.pathname]);
 
     useEffect(() => {
+        const hasToken = !!localStorage.getItem("token");
         if (location.pathname === '/my-bookings') {
-            setActiveTab('bookings');
+            if (!hasToken) {
+                navigate('/login', { state: { from: location.pathname } });
+            } else {
+                setActiveTab('bookings');
+            }
+        } else if (activeTab === 'bookings' && !hasToken) {
+            setActiveTab('upcoming');
         }
-    }, [location.pathname]);
+    }, [location.pathname, navigate, activeTab]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             const extractArray = (res) => {
-                if (!res || !res.data) return [];
-                // Check res.data.data, res.data.Data, or just res.data if it's an array
-                let data = res.data.data !== undefined ? res.data.data : res.data.Data;
+                if (!res) return [];
+                // Handle cases where res is already the array (from retry or simplified API)
+                if (Array.isArray(res)) return res;
+                if (Array.isArray(res.data)) return res.data;
+
+                // Handle ApiResponse<T> structure from BaseController
+                let data = res.data?.data !== undefined ? res.data.data : res.data?.Data;
                 if (data === undefined) data = res.data;
 
                 if (Array.isArray(data)) return data;
@@ -58,40 +69,85 @@ const UserDashboard = () => {
                 return [];
             };
 
+            const isLoggedIn = !!localStorage.getItem("token");
+
+            // 2. Fetch public data with individual error handling and AUTO-RETRY on 401
+            const fetchPublic = async (apiCall, label) => {
+                try {
+                    const res = await apiCall();
+                    return res;
+                } catch (err) {
+                    if (err.response?.status === 401) {
+                        console.warn(`[UserDashboard] ${label} unauthorized (401). Clearing token and retrying as guest...`);
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("role");
+                        localStorage.removeItem("email");
+
+                        try {
+                            // Explicitly retry without token by ensuring interceptor sees null
+                            const retryRes = await apiCall();
+                            return retryRes;
+                        } catch (retryErr) {
+                            console.error(`[UserDashboard] Guest retry failed for ${label}:`, retryErr.message);
+                            return { data: { data: [] } };
+                        }
+                    }
+                    console.error(`[UserDashboard] Failed to fetch ${label}:`, err.message);
+                    return { data: { data: [] } };
+                }
+            };
+
             const [eventRes, catRes, placeRes, bookingRes, paymentRes] = await Promise.all([
-                getAllScheduledEvents(),
-                getAllCategories(),
-                getAllPlaces(),
-                getMyBookings(),
-                getAllPayments().catch(() => ({ data: { data: [] } }))
+                fetchPublic(getAllScheduledEvents, 'Events'),
+                fetchPublic(getAllCategories, 'Categories'),
+                fetchPublic(getAllPlaces, 'Places'),
+                isLoggedIn ? getMyBookings().catch(err => {
+                    console.error("My Bookings Fetch Error:", err);
+                    return { data: { data: [] } };
+                }) : Promise.resolve({ data: { data: [] } }),
+                isLoggedIn ? getAllPayments().catch(() => ({ data: { data: [] } })) : Promise.resolve({ data: { data: [] } })
             ]);
 
-            console.log("DEBUG: My Bookings Response", bookingRes.data);
-
             const rawEvents = extractArray(eventRes);
-            const normalizedEvents = rawEvents.map(e => ({
-                ...e,
-                scheduleEventId: e.scheduleEventId || e.ScheduleEventId || e.id || e.Id,
-                details: e.details || e.Details || e.title || e.Title || "Untitled Event",
-                startDate: e.startDate || e.StartDate || (e.startTime && e.startTime.includes('T') ? e.startDate.split('T')[0] : (e.startDate || e.eventDate || e.EventDate || '')),
-                startTimePart: e.startTimePart || e.StartTimePart || (e.startTime && e.startTime.includes('T') ? e.startTime.split('T')[1].slice(0, 5) : (e.startTime ? e.startTime.slice(0, 5) : '')),
-                fees: e.fees || e.Fees || 0,
-                placeId: e.placeId || e.PlaceId,
-                placeName: e.placeName || e.PlaceName,
-                eventCategoryId: e.eventCategoryId || e.EventCategoryId,
-                eventCategoryName: e.eventCategoryName || e.EventCategoryName,
-                imagePath: e.imagePath || e.ImagePath
+            const rawCategories = extractArray(catRes);
+            const rawPlaces = extractArray(placeRes);
+
+            const normalizedEvents = rawEvents.map(e => {
+                const sDate = e.startDate || e.StartDate || e.eventDate || e.EventDate || "";
+                return {
+                    ...e,
+                    scheduleEventId: e.scheduleEventId || e.ScheduleEventId || e.id || e.Id,
+                    details: e.details || e.Details || e.title || e.Title || "Untitled Event",
+                    startDate: sDate,
+                    startTimePart: e.startTimePart || e.StartTimePart || (e.startTime && e.startTime.includes('T') ? e.startTime.split('T')[1].slice(0, 5) : (e.startTime ? e.startTime.slice(0, 5) : '')),
+                    fees: e.fees || e.Fees || 0,
+                    placeId: e.placeId || e.PlaceId,
+                    placeName: e.placeName || e.PlaceName,
+                    eventCategoryId: e.eventCategoryId || e.EventCategoryId,
+                    eventCategoryName: e.eventCategoryName || e.EventCategoryName,
+                    imagePath: e.imagePath || e.ImagePath
+                };
+            });
+
+            const normalizedCategories = rawCategories.map(c => ({
+                id: c.eventCategoryId || c.EventCategoryId || c.id || c.Id,
+                name: c.eventCategoryName || c.EventCategoryName || c.name || c.Name || "Unknown Category"
+            }));
+
+            const normalizedPlaces = rawPlaces.map(p => ({
+                id: p.placeId || p.PlaceId || p.id || p.Id,
+                name: p.placeName || p.PlaceName || p.name || p.Name || "Unknown Location"
             }));
 
             setEvents(normalizedEvents);
-            setCategories(extractArray(catRes));
-            setPlaces(extractArray(placeRes));
+            setCategories(normalizedCategories);
+            setPlaces(normalizedPlaces);
 
-            // The backend now only returns bookings for the logged-in user
+            console.log(`[Dashboard v2.2] Loaded: ${normalizedEvents.length} events, ${normalizedCategories.length} categories, ${normalizedPlaces.length} places`);
+
             const userBookingsRaw = extractArray(bookingRes);
             const allPayments = extractArray(paymentRes);
 
-            // Create a set of booking IDs that have a successful payment
             const paidBookingIds = new Set(
                 allPayments
                     .filter(p => {
@@ -126,7 +182,7 @@ const UserDashboard = () => {
             setMyBookings(userBookings);
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
-            if (err.response?.status === 401) {
+            if (err.response?.status === 401 && location.pathname === '/my-bookings') {
                 localStorage.clear();
                 navigate('/login');
             }
@@ -258,15 +314,11 @@ const UserDashboard = () => {
                                 style={{ borderRadius: '8px', padding: '10px' }}
                             >
                                 <option value="">All Locations</option>
-                                {Array.isArray(places) && places.map(p => {
-                                    const pId = p.placeId || p.PlaceId || p.id || p.Id;
-                                    const pName = p.placeName || p.PlaceName || p.name || p.Name;
-                                    return (
-                                        <option key={pId} value={pId}>
-                                            {pName}
-                                        </option>
-                                    );
-                                })}
+                                {Array.isArray(places) && places.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -293,15 +345,11 @@ const UserDashboard = () => {
                                 style={{ borderRadius: '8px', padding: '10px' }}
                             >
                                 <option value="">All Categories</option>
-                                {Array.isArray(categories) && categories.map(c => {
-                                    const cId = c.eventCategoryId || c.EventCategoryId || c.id || c.Id;
-                                    const cName = c.eventCategoryName || c.EventCategoryName || c.name || c.Name;
-                                    return (
-                                        <option key={cId} value={cId}>
-                                            {cName}
-                                        </option>
-                                    );
-                                })}
+                                {Array.isArray(categories) && categories.map(c => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -366,19 +414,29 @@ const UserDashboard = () => {
                                     <button
                                         className={`nav-link border-0 bg-transparent fw-bold ${activeTab === 'bookings' ? 'active' : 'text-muted'}`}
                                         style={activeTab === 'bookings' ? { borderBottom: '3px solid var(--theme-orange)', color: 'var(--theme-orange)' } : {}}
-                                        onClick={() => setActiveTab('bookings')}
+                                        onClick={() => {
+                                            if (!localStorage.getItem("token")) {
+                                                navigate('/login', { state: { from: '/my-bookings' } });
+                                            } else {
+                                                setActiveTab('bookings');
+                                            }
+                                        }}
                                     >
                                         My Bookings
                                     </button>
                                 </li>
                             </ul>
                             <div className="d-flex align-items-center gap-3">
-                                <div className="text-muted small">
-                                    Logged in as: <strong style={{ color: 'var(--theme-orange)' }}>{localStorage.getItem("email") || "Guest"}</strong>
-                                </div>
-                                <div className="text-muted small">
-                                    Showing <strong>{activeTab === 'bookings' ? myBookings.length : filteredEvents.length}</strong> {activeTab === 'bookings' ? 'bookings' : 'events'}
-                                </div>
+                                {localStorage.getItem("token") && (
+                                    <div className="text-muted small">
+                                        Showing <strong>{activeTab === 'bookings' ? myBookings.length : filteredEvents.length}</strong> {activeTab === 'bookings' ? 'bookings' : 'events'}
+                                    </div>
+                                )}
+                                {!localStorage.getItem("token") && (
+                                    <div className="text-muted small">
+                                        Showing <strong>{filteredEvents.length}</strong> events
+                                    </div>
+                                )}
                                 <button
                                     className="btn btn-sm btn-outline-secondary border-0 d-flex align-items-center"
                                     onClick={fetchData}
@@ -546,7 +604,7 @@ const UserDashboard = () => {
                                                     <div className="col-md-7">
                                                         <div className="card-body p-4 d-flex flex-column h-100">
                                                             <div className="text-uppercase small fw-800 mb-2" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
-                                                                {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || "UNCATEGORIZED"}
+                                                                {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.name || "UNCATEGORIZED"}
                                                             </div>
                                                             <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4' }}>
                                                                 {evt.details || evt.Details || "Untitled Event"}

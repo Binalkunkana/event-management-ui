@@ -25,6 +25,12 @@ const BookingPage = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate('/login', { state: { from: `/booking/${id}` } });
+            return;
+        }
+
         const userEmail = localStorage.getItem("email");
         if (userEmail) {
             setBookingData(prev => ({
@@ -33,7 +39,7 @@ const BookingPage = () => {
             }));
         }
         fetchEvent();
-    }, [id]);
+    }, [id, navigate]);
 
     const fetchEvent = async () => {
         try {
@@ -157,12 +163,12 @@ const BookingPage = () => {
                                             name="email"
                                             required
                                             className="form-control"
-                                            style={{ borderRadius: '10px', padding: '12px', backgroundColor: localStorage.getItem("email") ? '#f8f9fa' : 'white' }}
+                                            style={{ borderRadius: '10px', padding: '12px', backgroundColor: '#f8f9fa' }}
                                             value={bookingData.email}
-                                            readOnly={!!localStorage.getItem("email")}
+                                            readOnly={true}
                                             onChange={handleInputChange}
                                         />
-                                        {localStorage.getItem("email") && <small className="text-muted">Linked to your account</small>}
+                                        <small className="text-muted">Logged in as {bookingData.email}</small>
                                     </div>
                                     <div className="col-md-6">
                                         <label className="form-label small fw-bold text-muted text-uppercase">Phone Number</label>

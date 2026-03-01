@@ -36,7 +36,7 @@ const Navbar = () => {
                 <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
                     <ul className="navbar-nav gap-4">
                         <li className="nav-item">
-                            <Link className="nav-link text-uppercase fw-bold text-dark" to="/dashboard">Home</Link>
+                            <Link className="nav-link text-uppercase fw-bold text-dark" to="/">Home</Link>
                         </li>
                         <li className="nav-item">
                             <Link className="nav-link text-uppercase fw-bold text-dark" to="/events">Events</Link>

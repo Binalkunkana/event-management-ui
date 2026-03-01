@@ -36,8 +36,7 @@ const Layout = ({ children }) => {
   const hideNavbar = location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/organizer") ||
     location.pathname.startsWith("/users") ||
-    location.pathname === "/login" ||
-    location.pathname === "/";
+    location.pathname === "/login";
 
   return (
     <>
@@ -54,7 +53,7 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes with Layout */}
-        <Route path="/" element={<Layout><LoginPage /></Layout>} />
+        <Route path="/" element={<Layout><UserDashboard /></Layout>} />
         <Route path="/user" element={<Layout><LandingPage /></Layout>} />
         <Route path="/events" element={<Layout><EventListing /></Layout>} />
         <Route path="/events/:id" element={<Layout><EventDetails /></Layout>} />

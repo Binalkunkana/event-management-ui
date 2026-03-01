@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../api/authApi";
 
 export default function LoginPage() {
@@ -8,6 +8,7 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const decodeToken = (token) => {
         try {
@@ -47,7 +48,11 @@ export default function LoginPage() {
 
                 // 🎯 ROLE BASED REDIRECT
                 const lowerRole = role?.toLowerCase();
-                if (lowerRole === "admin" || lowerRole === "manager") {
+                const destination = location.state?.from;
+
+                if (destination) {
+                    navigate(destination);
+                } else if (lowerRole === "admin" || lowerRole === "manager") {
                     navigate("/admin");
                 } else if (lowerRole === "organizer") {
                     navigate("/organizer");
@@ -55,7 +60,8 @@ export default function LoginPage() {
                     navigate("/dashboard");
                 }
             } else {
-                navigate("/dashboard");
+                const destination = location.state?.from;
+                navigate(destination || "/dashboard");
             }
 
         } catch (err) {

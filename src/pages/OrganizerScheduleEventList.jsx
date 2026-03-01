@@ -70,7 +70,7 @@ const OrganizerScheduleEventList = () => {
             if (!Array.isArray(eventData)) eventData = [];
 
             // DISPLAY ALL DATA (Like Admin Side)
-            const normalizedData = eventData.map(e => ({
+            let normalizedData = eventData.map(e => ({
                 scheduleEventId: e.scheduleEventId || e.ScheduleEventId || e.id || e.Id,
                 details: e.Details || e.details || e.title || e.Title || "",
                 startDate: e.startDate || e.StartDate || (e.startTime && e.startTime.includes('T') ? e.startTime.split('T')[0] : (e.startDate || '')),
@@ -86,6 +86,12 @@ const OrganizerScheduleEventList = () => {
                 contactName: e.contactName || e.ContactName,
                 userId: e.userId || e.UserId
             }));
+
+            // Filter for organizers to only show their own events
+            const userRole = localStorage.getItem("role");
+            if (userRole === "Organizer") {
+                normalizedData = normalizedData.filter(e => String(e.userId || "") === String(currentUserId || ""));
+            }
 
             setEvents(normalizedData);
         } catch (error) {

@@ -18,7 +18,7 @@
   --matdash-text-light: #7C8FAC;
 
   --matdash-border: #DFE5EF;
-  --matdash-sidebar-width: 270px;
+  --matdash-sidebar-width: 240px;
 
   --matdash-shadow-sm: 0 2px 4px rgba(145, 158, 171, 0.08);
   --matdash-shadow-md: 0 4px 8px rgba(145, 158, 171, 0.12);
@@ -180,7 +180,7 @@
 }
 
 .sidebar-header {
-  padding: 24px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--matdash-border);
 }
 

@@ -21,7 +21,6 @@ const AdminHeader = () => {
                         onClick={toggleTheme}
                         title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                     >
-                        <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`}></i>
                     </button>
 
                     <button

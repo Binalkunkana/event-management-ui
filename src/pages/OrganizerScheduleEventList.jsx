@@ -25,8 +25,9 @@ const OrganizerScheduleEventList = () => {
         Phone: '',
         ContactName: '',
         UserId: localStorage.getItem("userId"),
-        ImageFile: null,
-        ImagePath: ''
+        Image: null,
+        ImagePath: '',
+        ScheduleEventId: 0
     });
     const [loading, setLoading] = useState(false);
     const currentUserId = localStorage.getItem("userId");
@@ -140,8 +141,9 @@ const OrganizerScheduleEventList = () => {
                 Phone: event.Phone || event.phone || '',
                 ContactName: event.ContactName || event.contactName || '',
                 UserId: event.UserId || event.userId || currentUserId,
-                ImageFile: null,
-                ImagePath: event.ImagePath || event.imagePath || ''
+                Image: null,
+                ImagePath: event.ImagePath || event.imagePath || '',
+                ScheduleEventId: eventId
             });
             setEditSidebarOpen(true);
         } catch (error) {
@@ -157,7 +159,7 @@ const OrganizerScheduleEventList = () => {
         setFormData({
             Details: '', StartDate: '', StartTime: '', EndDate: '', EndTime: '',
             Fees: 0, PlaceId: '', EventCategoryId: '', Phone: '', ContactName: '',
-            UserId: currentUserId, ImageFile: null, ImagePath: ''
+            UserId: currentUserId, Image: null, ImagePath: '', ScheduleEventId: 0
         });
         setEditSidebarOpen(true);
     };
@@ -165,6 +167,8 @@ const OrganizerScheduleEventList = () => {
     const handleSave = async () => {
         try {
             setLoading(true);
+
+            // 1. Basic Validation
             if (!formData.Details || !formData.StartDate || !formData.StartTime || !formData.EndDate || !formData.EndTime ||
                 !formData.PlaceId || !formData.EventCategoryId || !formData.Phone || !formData.ContactName || !formData.UserId) {
                 alert("Please fill in all required fields.");
@@ -172,58 +176,69 @@ const OrganizerScheduleEventList = () => {
                 return;
             }
 
-            // Format time as HH:mm:ss for backend TimeOnly.Parse
+            // 2. Helper to format time for TimeOnly (HH:mm:ss)
             const formatTime = (time) => {
                 if (!time) return "00:00:00";
                 return time.length === 5 ? `${time}:00` : time;
             };
 
-            const formDataToSend = new FormData();
-            formDataToSend.append('Details', formData.Details);
-            formDataToSend.append('StartDate', formData.StartDate);
-            formDataToSend.append('EndDate', formData.EndDate);
-            formDataToSend.append('StartTime', formatTime(formData.StartTime));
-            formDataToSend.append('EndTime', formatTime(formData.EndTime));
-            formDataToSend.append('Fees', formData.Fees);
-            formDataToSend.append('ContactName', formData.ContactName);
-            formDataToSend.append('Phone', formData.Phone);
-            formDataToSend.append('EventCategoryId', formData.EventCategoryId);
-            formDataToSend.append('PlaceId', formData.PlaceId);
-            formDataToSend.append('UserId', formData.UserId);
-            formDataToSend.append('ImagePath', formData.ImagePath || ""); // Crucial to avoid NULL constraint
-
-            if (formData.ImageFile) {
-                formDataToSend.append('ImageFile', formData.ImageFile);
-            }
+            // 3. ALWAYS use FormData for .NET model binding compatibility with file properties
+            const fd = new FormData();
 
             if (mode === "edit") {
                 const id = Number(editingEvent.scheduleEventId || editingEvent.ScheduleEventId || editingEvent.id || editingEvent.Id);
-                formDataToSend.append('ScheduleEventId', id);
+                fd.append('ScheduleEventId', id);
+            }
 
-                console.log("Updating Event with FormData (PascalCase)");
-                await updateScheduledEvent(id, formDataToSend);
+            fd.append('Details', formData.Details);
+            fd.append('StartDate', formData.StartDate);
+            fd.append('EndDate', formData.EndDate);
+            fd.append('StartTime', formatTime(formData.StartTime));
+            fd.append('EndTime', formatTime(formData.EndTime));
+            fd.append('Fees', formData.Fees);
+            fd.append('ContactName', formData.ContactName);
+            fd.append('Phone', formData.Phone);
+            fd.append('EventCategoryId', formData.EventCategoryId);
+            fd.append('PlaceId', formData.PlaceId);
+            fd.append('UserId', formData.UserId);
+
+            // CRITICAL: Ensure ImagePath is a string (even empty) to satisfy non-null constraint
+            fd.append('ImagePath', formData.ImagePath || "");
+
+            // 4. Append image file if selected
+            if (formData.Image) {
+                fd.append('Image', formData.Image);
+            }
+
+            // 5. API Call
+            if (mode === "edit") {
+                const id = Number(formData.ScheduleEventId || editingEvent?.scheduleEventId || editingEvent?.ScheduleEventId);
+                console.log("Updating Event with FormData:", Object.fromEntries(fd.entries()));
+                await updateScheduledEvent(id, fd);
                 alert("Event updated!");
             } else {
-                console.log("Creating Event with FormData (PascalCase)");
-                await createScheduledEvent(formDataToSend);
+                console.log("Creating Event with FormData:", Object.fromEntries(fd.entries()));
+                await createScheduledEvent(fd);
                 alert("Event created!");
             }
+
             setEditSidebarOpen(false);
             fetchEvents();
         } catch (error) {
             console.error("Save error full details:", error.response || error);
             const errorData = error.response?.data;
-
             if (errorData?.errors) {
                 console.log("Validation Errors:", JSON.stringify(errorData.errors, null, 2));
                 alert("Validation Error: " + Object.values(errorData.errors).flat().join("\n"));
             } else {
-                alert("Error saving event: " + (errorData?.title || errorData?.message || error.message));
+                alert("Error saving event: " + (errorData?.title || errorData?.message || error.message || "Internal Server Error"));
             }
         } finally {
             setLoading(false);
         }
     };
+
+
 
     const handleDelete = async (id) => {
         if (window.confirm("Delete this event?")) {
@@ -238,7 +253,7 @@ const OrganizerScheduleEventList = () => {
 
     const handleInputChange = (e) => {
         const { name, value, files } = e.target;
-        if (name === "ImageFile") {
+        if (name === "Image") {
             const file = files[0];
             setFormData(prev => ({
                 ...prev,
@@ -510,12 +525,12 @@ const OrganizerScheduleEventList = () => {
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: 'var(--matdash-text-dark)', marginBottom: '8px' }}>Event Image</label>
                         <input
                             type="file"
-                            name="ImageFile"
+                            name="Image"
                             onChange={handleInputChange}
                             accept="image/*"
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--matdash-border)', fontSize: '14px', backgroundColor: 'white' }}
                         />
-                        {mode === "edit" && editingEvent?.imagePath && !formData.ImageFile && (
+                        {mode === "edit" && editingEvent?.imagePath && !formData.Image && (
                             <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--matdash-text-muted)' }}>
                                 Current image: {editingEvent.imagePath}
                             </div>

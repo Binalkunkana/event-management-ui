@@ -103,158 +103,91 @@ const PaymentPage = () => {
     return (
         <div className="container py-5">
             <div className="row justify-content-center">
-                <div className="col-md-6">
-                    <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
-                        <div className="card-header bg-white border-0 pt-4 px-4">
-                            <h3 className="text-center fw-bold mb-0">Secure Payment</h3>
-                            <div className="text-center mt-2">
-                                <span className="badge bg-light text-dark fs-6 py-2 px-3 border">
-                                    Amount to Pay: ₹{amount}
-                                </span>
-                            </div>
+                <div className="col-md-6 mt-4">
+                    <div className="card shadow-sm border-0">
+                        <div className="card-header bg-warning text-dark py-3">
+                            <h4 className="mb-0 fw-bold text-center">Checkout</h4>
                         </div>
-                        <div className="card-body p-4 p-md-5">
+                        <div className="card-body p-4">
+                            <div className="text-center mb-4 p-3 bg-light rounded">
+                                <span className="text-muted d-block small mb-1">Total Amount Payable</span>
+                                <h2 className="fw-bold text-primary mb-0">₹{amount}</h2>
+                            </div>
 
-                            {/* Method Switcher */}
-                            <div className="d-flex gap-2 mb-4 p-1 bg-light rounded-3">
-                                <button
-                                    className={`btn flex-grow-1 py-2 rounded-3 fw-bold border-0 ${method === 'Card' ? 'bg-white shadow-sm' : 'text-muted'}`}
-                                    onClick={() => setMethod('Card')}
-                                >
-                                    <i className="bi bi-credit-card me-2"></i> Card
-                                </button>
-                                <button
-                                    className={`btn flex-grow-1 py-2 rounded-3 fw-bold border-0 ${method === 'QR' ? 'bg-white shadow-sm' : 'text-muted'}`}
-                                    onClick={() => setMethod('QR')}
-                                >
-                                    <i className="bi bi-qr-code-scan me-2"></i> QR Code
-                                </button>
-                                <button
-                                    className={`btn flex-grow-1 py-2 rounded-3 fw-bold border-0 ${method === 'NetBanking' ? 'bg-white shadow-sm' : 'text-muted'}`}
-                                    onClick={() => setMethod('NetBanking')}
-                                >
-                                    <i className="bi bi-bank me-2"></i> Net Banking
-                                </button>
+                            <div className="mb-4">
+                                <label className="form-label fw-bold small text-uppercase">Payment Method</label>
+                                <div className="btn-group w-100" role="group">
+                                    <input type="radio" className="btn-check" name="method" id="card" checked={method === 'Card'} onChange={() => setMethod('Card')} />
+                                    <label className="btn btn-outline-primary" htmlFor="card">Card</label>
+
+                                    <input type="radio" className="btn-check" name="method" id="qr" checked={method === 'QR'} onChange={() => setMethod('QR')} />
+                                    <label className="btn btn-outline-primary" htmlFor="qr">UPI / QR</label>
+
+                                    <input type="radio" className="btn-check" name="method" id="net" checked={method === 'NetBanking'} onChange={() => setMethod('NetBanking')} />
+                                    <label className="btn btn-outline-primary" htmlFor="net">Net Banking</label>
+                                </div>
                             </div>
 
                             <form onSubmit={handlePayment}>
                                 {method === "Card" && (
-                                    <>
+                                    <div className="fade-in">
                                         <div className="mb-3">
-                                            <label className="form-label small fw-bold text-muted">CARD HOLDER NAME</label>
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                className="form-control premium-input text-dark"
-                                                placeholder="Full Name"
-                                                onChange={handleChange}
-                                                required
-                                            />
+                                            <label className="form-label">Card Holder Name</label>
+                                            <input type="text" name="name" className="form-control" placeholder="Full name on card" onChange={handleChange} required />
                                         </div>
                                         <div className="mb-3">
-                                            <label className="form-label small fw-bold text-muted">CARD NUMBER</label>
-                                            <div className="input-group">
-                                                <span className="input-group-text bg-white border-end-0"><i className="bi bi-credit-card"></i></span>
-                                                <input
-                                                    type="text"
-                                                    name="cardNumber"
-                                                    className="form-control premium-input border-start-0 text-dark"
-                                                    placeholder="0000 0000 0000 0000"
-                                                    onChange={handleChange}
-                                                    required
-                                                />
-                                            </div>
+                                            <label className="form-label">Card Number</label>
+                                            <input type="text" name="cardNumber" className="form-control" placeholder="1234 5678 9101 1121" onChange={handleChange} required />
                                         </div>
                                         <div className="row">
                                             <div className="col-6 mb-3">
-                                                <label className="form-label small fw-bold text-muted">EXPIRY DATE</label>
-                                                <input
-                                                    type="text"
-                                                    name="expiry"
-                                                    className="form-control premium-input text-dark"
-                                                    placeholder="MM/YY"
-                                                    onChange={handleChange}
-                                                    required
-                                                />
+                                                <label className="form-label">Expiry</label>
+                                                <input type="text" name="expiry" className="form-control" placeholder="MM/YY" onChange={handleChange} required />
                                             </div>
-                                            <div className="col-6 mb-4">
-                                                <label className="form-label small fw-bold text-muted">CVV</label>
-                                                <input
-                                                    type="text"
-                                                    name="cvv"
-                                                    className="form-control premium-input text-dark"
-                                                    placeholder="123"
-                                                    onChange={handleChange}
-                                                    required
-                                                />
+                                            <div className="col-6 mb-3">
+                                                <label className="form-label">CVV</label>
+                                                <input type="password" name="cvv" className="form-control" placeholder="***" maxLength="3" onChange={handleChange} required />
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
                                 )}
 
                                 {method === "QR" && (
-                                    <div className="text-center py-2">
-                                        <div className="mb-4">
-                                            <p className="text-muted mb-3">Scan this QR code using any UPI app</p>
-                                            <div className="p-4 bg-white shadow-sm border rounded-4 d-inline-block mx-auto mb-3">
-                                                {/* Scannable Dummy QR Code */}
-                                                <img
-                                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=dummy-merchant@okaxis&pn=Manup%20Events&am=${amount}&cu=INR`}
-                                                    alt="Payment QR Code"
-                                                    style={{ width: '180px', height: '180px' }}
-                                                    className="img-fluid"
-                                                />
-                                            </div>
-                                            <div className="h4 fw-bold mb-1">Pay with UPI</div>
-                                            <p className="text-secondary small">Merchant: Manup Events</p>
-                                        </div>
-                                        <div className="mb-4 text-start">
-                                            <label className="form-label small fw-bold text-muted">ENTER YOUR UPI ID</label>
-                                            <input
-                                                type="text"
-                                                name="upiId"
-                                                className="form-control premium-input text-dark"
-                                                placeholder="username@bank"
-                                                onChange={handleChange}
-                                                required
+                                    <div className="text-center py-3 fade-in">
+                                        <p className="small text-muted mb-3">Scan to pay with any UPI app</p>
+                                        <div className="mb-4 border p-2 d-inline-block bg-white shadow-sm">
+                                            <img
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=manup@upi&pn=ManupEvents&am=${amount}&cu=INR`}
+                                                alt="QR Code"
+                                                style={{ width: '180px' }}
                                             />
+                                        </div>
+                                        <div className="mb-3 text-start">
+                                            <label className="form-label">Your UPI ID</label>
+                                            <input type="text" name="upiId" className="form-control" placeholder="user@bank" onChange={handleChange} required />
                                         </div>
                                     </div>
                                 )}
 
                                 {method === "NetBanking" && (
-                                    <div className="mb-4">
-                                        <label className="form-label small fw-bold text-muted">SELECT YOUR BANK</label>
-                                        <select
-                                            name="bankName"
-                                            className="form-select premium-input text-dark px-3 py-2"
-                                            onChange={handleChange}
-                                            required
-                                            defaultValue=""
-                                        >
+                                    <div className="mb-4 fade-in">
+                                        <label className="form-label">Select Bank</label>
+                                        <select name="bankName" className="form-select" onChange={handleChange} required defaultValue="">
                                             <option value="" disabled>Choose your bank</option>
                                             <option value="SBI">State Bank of India</option>
                                             <option value="HDFC">HDFC Bank</option>
                                             <option value="ICICI">ICICI Bank</option>
-                                            <option value="AXIS">Axis Bank</option>
-                                            <option value="PNB">Punjab National Bank</option>
                                         </select>
-                                        <div className="mt-4 p-3 bg-light rounded-3 small text-muted">
-                                            <i className="bi bi-info-circle me-2"></i>
-                                            You will be redirected to your bank's secure login page to complete the transaction.
-                                        </div>
                                     </div>
                                 )}
 
-                                <button type="submit" className="btn btn-theme w-100 btn-lg fw-bold py-3 rounded-pill shadow" style={{ backgroundColor: 'var(--theme-orange)', color: 'black', border: 'none' }} disabled={loading}>
-                                    {loading ? "Processing..." : `PAY ₹${amount} SECURELY`}
+                                <button type="submit" className="btn btn-primary w-100 py-3 fw-bold mt-4" disabled={loading}>
+                                    {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : `Pay ₹${amount}`}
                                 </button>
                             </form>
 
                             <div className="text-center mt-4">
-                                <span className="small text-muted d-flex align-items-center justify-content-center gap-1">
-                                    <i className="bi bi-shield-lock-fill"></i> SSL Secure & Encrypted Payment
-                                </span>
+                                <small className="text-muted"><i className="bi bi-shield-lock-fill me-1"></i> Secure Payment by Manup</small>
                             </div>
                         </div>
                     </div>

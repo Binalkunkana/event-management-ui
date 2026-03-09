@@ -74,129 +74,79 @@ const ReceiptPage = () => {
         <div className="container py-5">
             <div className="row justify-content-center">
                 <div className="col-md-8">
-                    {/* Success Message - Hide when printing */}
-                    <div className="text-center mb-4 d-print-none">
-                        <div className="display-1 text-success mb-3">
-                            <i className="bi bi-patch-check-fill"></i>
-                        </div>
-                        <h2 className="fw-bold">Payment Successful!</h2>
-                        <p className="text-muted">Your booking has been confirmed. You can download the receipt below.</p>
-                        <div className="d-flex justify-content-center gap-2 mt-4">
-                            <button className="btn btn-theme px-4 py-2 rounded-pill fw-bold" style={{ backgroundColor: 'var(--theme-orange)', border: 'none' }} onClick={handlePrint}>
-                                <i className="bi bi-download me-2"></i> Download Receipt
+                    <div className="text-center mb-5 mt-4">
+                        <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4rem' }}></i>
+                        <h2 className="fw-bold mt-3">Booking Confirmed!</h2>
+                        <p className="text-muted">Thank you for booking with Manup. Your ticket is ready.</p>
+
+                        <div className="mt-4">
+                            <button className="btn btn-primary px-4 py-2 me-3" onClick={handlePrint}>
+                                <i className="bi bi-printer me-2"></i> Print Receipt
                             </button>
-                            <button className="btn btn-outline-dark px-4 py-2 rounded-pill fw-bold" onClick={() => navigate('/dashboard')}>
-                                <i className="bi bi-house-door me-2"></i> Go to Dashboard
+                            <button className="btn btn-outline-dark px-4 py-2" onClick={() => navigate('/userdashboard')}>
+                                Go to Dashboard
                             </button>
                         </div>
                     </div>
 
-                    {/* Receipt Card */}
-                    <div className="card border-0 shadow-sm receipt-card" id="receipt-content" style={{ borderRadius: '20px', overflow: 'hidden' }}>
-                        <div className="card-header bg-dark text-white p-4 text-center border-0">
-                            <h4 className="mb-1 text-uppercase fw-bold tracking-widest">Booking Receipt</h4>
-                            <p className="small mb-0 opacity-75">Transaction ID: {payment?.transactionId || "N/A"}</p>
+                    <div className="card shadow border-0" id="receipt-content">
+                        <div className="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 className="mb-0 fw-bold">Manup</h3>
+                                <small className="opacity-75">Event Management Receipt</small>
+                            </div>
+                            <div className="text-end">
+                                <div className="badge bg-warning text-dark">PAID</div>
+                                <div className="small mt-1">Ref: {payment?.transactionId || `REF-${bookingId}`}</div>
+                            </div>
                         </div>
-                        <div className="card-body p-4 p-md-5">
+                        <div className="card-body p-5">
                             <div className="row mb-5">
                                 <div className="col-6">
-                                    <h6 className="text-muted small fw-bold text-uppercase mb-3">Billed To</h6>
-                                    <h5 className="fw-bold mb-1">{booking.name || booking.Name}</h5>
-                                    <p className="text-muted small mb-0">{booking.email || booking.Email}</p>
-                                    <p className="text-muted small mb-0">{booking.phone || booking.Phone}</p>
+                                    <h6 className="fw-bold text-muted mb-2">Customer Details</h6>
+                                    <p className="mb-0 fw-bold">{booking.name}</p>
+                                    <p className="mb-0 small text-muted">{booking.email}</p>
+                                    <p className="mb-0 small text-muted">{booking.phone}</p>
                                 </div>
                                 <div className="col-6 text-end">
-                                    <h6 className="text-muted small fw-bold text-uppercase mb-3">Booking Date</h6>
-                                    <h5 className="fw-bold mb-0">{new Date(payment?.paymentDate || new Date()).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</h5>
+                                    <h6 className="fw-bold text-muted mb-2">Booking Info</h6>
+                                    <p className="mb-0 small text-muted">Date: {new Date().toLocaleDateString()}</p>
+                                    <p className="mb-0 small text-muted">Method: {payment?.paymentMethod || "Direct"}</p>
                                 </div>
                             </div>
 
-                            <div className="table-responsive mb-5">
-                                <table className="table table-borderless">
-                                    <thead className="border-bottom">
-                                        <tr>
-                                            <th className="px-0 py-3 text-muted small fw-bold text-uppercase">Description</th>
-                                            <th className="text-end px-0 py-3 text-muted small fw-bold text-uppercase">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className="border-bottom">
-                                            <td className="px-0 py-4">
-                                                <h6 className="fw-bold mb-1">{event.details || event.Details || event.title}</h6>
-                                                <p className="text-muted small mb-0">Date: {new Date(event.startDate || event.StartDate).toLocaleDateString()}</p>
-                                                <p className="text-muted small mb-0">Location: {event.placeName || event.PlaceName}</p>
-                                            </td>
-                                            <td className="text-end px-0 py-4 fw-bold">₹{booking.scheduleEventFees || booking.ScheduleEventFees || event.fees || 0}</td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td className="px-0 py-4 pt-5">
-                                                <h5 className="fw-bold mb-0 text-uppercase">Total Paid</h5>
-                                            </td>
-                                            <td className="text-end px-0 py-4 pt-5">
-                                                <h5 className="fw-bold mb-0 text-success">₹{booking.scheduleEventFees || booking.ScheduleEventFees || event.fees || 0}</h5>
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
+                            <table className="table table-bordered mt-4">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Event Description</th>
+                                        <th className="text-end" style={{ width: '150px' }}>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div className="fw-bold">{event.title}</div>
+                                            <small className="text-muted">{new Date(event.startDate).toLocaleDateString()} at {event.placeName || "Venue"}</small>
+                                        </td>
+                                        <td className="text-end fw-bold">₹{booking.scheduleEventFees || event.fees || 0}</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr className="table-light">
+                                        <th className="text-end">Total Paid</th>
+                                        <th className="text-end text-primary h5 fw-bold">₹{booking.scheduleEventFees || event.fees || 0}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
 
-                            <div className="bg-light p-4 rounded-4 mb-4">
-                                <div className="row g-3">
-                                    <div className="col-sm-6">
-                                        <h6 className="text-muted small fw-bold text-uppercase mb-2">Payment Method</h6>
-                                        <p className="fw-bold mb-0">{payment?.paymentMethod || "Online"}</p>
-                                    </div>
-                                    <div className="col-sm-6 text-sm-end">
-                                        <h6 className="text-muted small fw-bold text-uppercase mb-2">Payment Status</h6>
-                                        <p className="text-success fw-bold mb-0">Successful <i className="bi bi-check-circle-fill"></i></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="text-center pt-4 border-top">
-                                <p className="text-muted small mb-1">Thank you for booking with Manup!</p>
-                                <p className="text-muted x-small mb-0">This is a computer-generated receipt.</p>
+                            <div className="mt-5 text-center pt-4 border-top">
+                                <p className="mb-0 text-muted small">This is a system generated receipt and does not require a signature.</p>
+                                <p className="fw-bold text-primary mb-0">Manup - Perfect Events, Every Time.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {/* Print specific styles */}
-            <style>
-                {`
-                @media print {
-                    nav, .d-print-none, footer {
-                        display: none !important;
-                    }
-                    body {
-                        background: white !important;
-                        padding: 0 !important;
-                    }
-                    .container {
-                        max-width: 100% !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    .receipt-card {
-                        box-shadow: none !important;
-                        border: 1px solid #eee !important;
-                    }
-                    .card-body {
-                        padding: 2rem !important;
-                    }
-                }
-                .tracking-widest {
-                    letter-spacing: 0.2rem;
-                }
-                .x-small {
-                    font-size: 0.75rem;
-                }
-                `}
-            </style>
         </div>
     );
 };

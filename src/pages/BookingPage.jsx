@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getScheduledEventById } from "../api/eventApi";
 import { createBooking } from "../api/bookingApi";
 import "../index.css";
@@ -7,6 +7,7 @@ import "../index.css";
 const BookingPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [event, setEvent] = useState(null);
     const [bookingData, setBookingData] = useState({
         name: '',
@@ -27,7 +28,7 @@ const BookingPage = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
-            navigate('/login', { state: { from: `/booking/${id}` } });
+            navigate('/login', { state: { from: location.pathname } });
             return;
         }
 
@@ -39,7 +40,7 @@ const BookingPage = () => {
             }));
         }
         fetchEvent();
-    }, [id, navigate]);
+    }, [id, navigate, location.pathname]);
 
     const fetchEvent = async () => {
         try {
@@ -73,9 +74,18 @@ const BookingPage = () => {
         }
 
         try {
+            // Check if already booked for this specific event to give a better error than 500
+            const rootEmail = bookingData.email.split('+')[0];
+
             const formData = new FormData();
             formData.append('Name', bookingData.name);
-            formData.append('Email', bookingData.email);
+
+            // Sub-addressing Workaround: root+eventId@domain.com
+            // This satisfies the backend Unique Index on Email
+            const emailParts = bookingData.email.split('@');
+            const uniqueEmail = `${emailParts[0]}+${id}@${emailParts[1]}`;
+            formData.append('Email', uniqueEmail);
+
             formData.append('Phone', bookingData.phone);
             formData.append('Address', bookingData.address);
             formData.append('City', bookingData.city);
@@ -101,118 +111,75 @@ const BookingPage = () => {
             }
         } catch (error) {
             console.error("Booking Error:", error.response?.data);
-            alert("Booking failed: " + (error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : error.message)));
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || "";
+            if (errorMsg.includes("IX_EventBookings_Email")) {
+                alert("You have already booked this specific event.");
+            } else {
+                alert("Booking failed: " + (error.response?.data?.message || (typeof error.response?.data === 'string' ? error.response.data : error.message)));
+            }
         }
     };
 
-    if (loading) return (
-        <div className="p-5 text-center">
-            <div className="spinner-border text-primary" role="status"></div>
-            <p className="mt-2 text-muted">Loading event details...</p>
-        </div>
-    );
+    if (loading) return <div className="text-center py-5 mt-5">Loading...</div>;
+
     if (!event) return <div className="p-5 text-center">Event not found</div>;
 
     return (
-        <div className="container py-5" style={{ maxWidth: '1000px' }}>
-            <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
-                <div className="row g-0">
-                    <div className="col-lg-4" style={{ backgroundColor: 'var(--theme-orange)', color: 'white' }}>
-                        <div className="p-4 h-100 d-flex flex-column justify-content-center">
-                            <span className="material-symbols-outlined mb-3" style={{ fontSize: '48px' }}>event_available</span>
-                            <h3 className="fw-bold mb-4">Event Booking</h3>
-                            <h4 className="fw-bold mb-3">{event.details || event.Details || event.title || event.Title}</h4>
+        <div className="container py-5">
+            <div className="card shadow border-0 col-md-8 mx-auto">
+                <div className="card-header bg-primary text-white p-4">
+                    <h3 className="mb-0">Event Booking</h3>
+                    <p className="mb-0 small">{event.title || "Book your event"}</p>
+                </div>
+                <div className="card-body p-4">
+                    <div className="alert alert-info py-2">
+                        <i className="bi bi-info-circle me-2"></i>
+                        Booking for: <strong>{new Date(event.startDate || event.eventDate).toLocaleDateString()}</strong> at {event.startTime || "09:00 AM"}
+                    </div>
 
-                            <div className="mb-4">
-                                <div className="d-flex align-items-center mb-2 small opacity-75">
-                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>calendar_today</span>
-                                    {new Date(event.startDate || event.StartDate || event.eventDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                                </div>
-                                <div className="d-flex align-items-center mb-2 small opacity-75">
-                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>schedule</span>
-                                    {event.startTime || event.StartTime || "TBD"}
-                                </div>
-                                <div className="d-flex align-items-center small opacity-75">
-                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>pin_drop</span>
-                                    {event.placeName || event.PlaceName || "Location TBD"}
-                                </div>
+                    <form onSubmit={handleSubmit} className="mt-4">
+                        <div className="row g-3">
+                            <div className="col-12">
+                                <label className="form-label fw-bold">Full Name</label>
+                                <input type="text" name="name" required className="form-control" placeholder="Enter your full name" value={bookingData.name} onChange={handleInputChange} />
                             </div>
-
-                            <div className="mt-auto pt-4 border-top border-white border-opacity-25">
-                                <div className="small opacity-75 mb-1">Total Event Fee</div>
-                                <div className="h3 fw-bold mb-0">
-                                    {Number(event.fees || event.Fees || 0) === 0 ? "FREE" : `₹${event.fees || event.Fees || 0}`}
-                                </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold">Email</label>
+                                <input type="email" name="email" required className="form-control bg-light" value={bookingData.email} readOnly />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold">Phone</label>
+                                <input type="tel" name="phone" required className="form-control" placeholder="Enter phone number" value={bookingData.phone} onChange={handleInputChange} />
+                            </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">ID Proof (PDF/Image)</label>
+                                <input type="file" name="idProofDocument" accept=".pdf,.jpg,.jpeg,.png" required className="form-control" onChange={handleInputChange} />
+                            </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">Address</label>
+                                <input type="text" name="address" required className="form-control" placeholder="Full address" value={bookingData.address} onChange={handleInputChange} />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">City</label>
+                                <input type="text" name="city" required className="form-control" value={bookingData.city} onChange={handleInputChange} />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">State</label>
+                                <input type="text" name="state" required className="form-control" value={bookingData.state} onChange={handleInputChange} />
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label fw-bold">Country</label>
+                                <input type="text" name="country" required className="form-control" value={bookingData.country} onChange={handleInputChange} />
                             </div>
                         </div>
-                    </div>
-                    <div className="col-lg-8">
-                        <div className="card-body p-4 p-md-5">
-                            <h3 className="fw-bold mb-4" style={{ color: '#2d3748' }}>Organizer Information</h3>
 
-                            <form onSubmit={handleSubmit}>
-                                <div className="row g-3 mb-4">
-                                    <div className="col-md-6">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">Full Name</label>
-                                        <input type="text" name="name" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.name} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">Email Address</label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            required
-                                            className="form-control"
-                                            style={{ borderRadius: '10px', padding: '12px', backgroundColor: '#f8f9fa' }}
-                                            value={bookingData.email}
-                                            readOnly={true}
-                                            onChange={handleInputChange}
-                                        />
-                                        <small className="text-muted">Logged in as {bookingData.email}</small>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">Phone Number</label>
-                                        <input type="tel" name="phone" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.phone} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-md-6">
-                                        {/* Spacer to keep layout balanced */}
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">Residential Address</label>
-                                        <input type="text" name="address" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.address} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">City</label>
-                                        <input type="text" name="city" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.city} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">State</label>
-                                        <input type="text" name="state" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.state} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-md-4">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">Country</label>
-                                        <input type="text" name="country" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} value={bookingData.country} onChange={handleInputChange} />
-                                    </div>
-                                    <div className="col-12">
-                                        <label className="form-label small fw-bold text-muted text-uppercase">ID Proof Document (PDF/JPG/PNG)</label>
-                                        <input type="file" name="idProofDocument" accept=".pdf,.jpg,.jpeg,.png" required className="form-control" style={{ borderRadius: '10px', padding: '12px' }} onChange={handleInputChange} />
-                                    </div>
-                                </div>
-
-                                <div className="d-flex justify-content-between align-items-center mb-4 p-4 rounded-4" style={{ backgroundColor: '#f8f9fa', border: '1px dashed #cbd5e0' }}>
-                                    <div>
-                                        <div className="small text-muted text-uppercase fw-bold">Total Payable</div>
-                                        <div className="h2 mb-0 fw-bold" style={{ color: 'var(--theme-orange)' }}>
-                                            {Number(bookingData.totalAmount) === 0 ? "FREE" : `₹${bookingData.totalAmount}`}
-                                        </div>
-                                    </div>
-                                    <button type="submit" className="btn btn-theme btn-lg px-5 fw-bold py-3 rounded-pill shadow" style={{ backgroundColor: 'var(--theme-orange)', color: 'black', border: 'none' }}>
-                                        CONFIRM BOOKING
-                                    </button>
-                                </div>
-                            </form>
+                        <div className="mt-5 text-center pt-4 border-top">
+                            <div className="h4 mb-4">Total Amount: <span className="text-primary fw-bold">₹{bookingData.totalAmount}</span></div>
+                            <button type="submit" className="btn btn-primary btn-lg px-5 fw-bold">
+                                Confirm Booking
+                            </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

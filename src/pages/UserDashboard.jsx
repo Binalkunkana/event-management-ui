@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getAllScheduledEvents } from '../api/eventApi';
 import { getAllCategories } from '../api/categoryApi';
 import { getAllPlaces } from '../api/placeApi';
-import { getMyBookings, updateBooking } from '../api/bookingApi';
+import { getAllBookings, getMyBookings, updateBooking } from '../api/bookingApi';
 import { getAllPayments } from '../api/paymentApi';
 
 const UserDashboard = () => {
@@ -34,7 +34,7 @@ const UserDashboard = () => {
 
     useEffect(() => {
         fetchData();
-    }, [location.pathname]);
+    }, [location.pathname, activeTab]);
 
     useEffect(() => {
         const hasToken = !!localStorage.getItem("token");
@@ -101,8 +101,8 @@ const UserDashboard = () => {
                 fetchPublic(getAllScheduledEvents, 'Events'),
                 fetchPublic(getAllCategories, 'Categories'),
                 fetchPublic(getAllPlaces, 'Places'),
-                isLoggedIn ? getMyBookings().catch(err => {
-                    console.error("My Bookings Fetch Error:", err);
+                isLoggedIn ? getAllBookings().catch(err => {
+                    console.error("All Bookings Fetch Error:", err);
                     return { data: { data: [] } };
                 }) : Promise.resolve({ data: { data: [] } }),
                 isLoggedIn ? getAllPayments().catch(() => ({ data: { data: [] } })) : Promise.resolve({ data: { data: [] } })
@@ -113,7 +113,7 @@ const UserDashboard = () => {
             const rawPlaces = extractArray(placeRes);
 
             const normalizedEvents = rawEvents.map(e => {
-                const sDate = e.startDate || e.StartDate || e.eventDate || e.EventDate || "";
+                const sDate = e.startDate || e.StartDate || e.eventDate || e.EventDate || (e.startTime && e.startTime.includes('T') ? e.startTime.split('T')[0] : (e.startTime || ""));
                 return {
                     ...e,
                     scheduleEventId: e.scheduleEventId || e.ScheduleEventId || e.id || e.Id,
@@ -157,34 +157,50 @@ const UserDashboard = () => {
                     .map(p => String(p.eventBookingId || p.EventBookingId))
             );
 
-            const userBookings = userBookingsRaw.map(b => {
-                const bId = String(b.eventBookingId || b.EventBookingId || b.id || b.Id);
-                return {
-                    ...b,
-                    eventBookingId: bId,
-                    scheduleEventId: b.scheduleEventId || b.ScheduleEventId,
-                    name: b.name || b.Name,
-                    email: b.email || b.Email,
-                    phone: b.phone || b.Phone,
-                    address: b.address || b.Address,
-                    city: b.city || b.City,
-                    state: b.state || b.State,
-                    country: b.country || b.Country,
-                    scheduleEventDetails: b.scheduleEventDetails || b.ScheduleEventDetails,
-                    scheduleEventFees: b.scheduleEventFees || b.ScheduleEventFees,
-                    idProofDocumentPath: b.idProofDocumentPath || b.IdProofDocumentPath,
-                    isCancelled: b.isCancelled === true || b.IsCancelled === true,
-                    cancellationDateTime: b.cancellationDateTime || b.CancellationDateTime,
-                    isPaid: paidBookingIds.has(bId) || Number(b.scheduleEventFees || b.ScheduleEventFees || 0) === 0
-                };
-            });
+            const getRootEmail = (email) => {
+                if (!email || !email.includes('@')) return (email || "").toLowerCase();
+                const [local, domain] = email.split('@');
+                const rootLocal = local.split('+')[0];
+                return `${rootLocal}@${domain}`.toLowerCase();
+            };
+
+            const currentUserEmail = getRootEmail(localStorage.getItem("email"));
+
+            const userBookings = userBookingsRaw
+                .filter(b => {
+                    if (!currentUserEmail) return false;
+                    const bookingEmail = (b.email || b.Email || "").toLowerCase();
+                    return getRootEmail(bookingEmail) === currentUserEmail;
+                })
+                .map(b => {
+                    const bId = String(b.eventBookingId || b.EventBookingId || b.id || b.Id);
+                    return {
+                        ...b,
+                        eventBookingId: bId,
+                        scheduleEventId: b.scheduleEventId || b.ScheduleEventId,
+                        name: b.name || b.Name,
+                        email: b.email || b.Email,
+                        phone: b.phone || b.Phone,
+                        address: b.address || b.Address,
+                        city: b.city || b.City,
+                        state: b.state || b.State,
+                        country: b.country || b.Country,
+                        scheduleEventDetails: b.scheduleEventDetails || b.ScheduleEventDetails,
+                        scheduleEventFees: b.scheduleEventFees || b.ScheduleEventFees,
+                        idProofDocumentPath: b.idProofDocumentPath || b.IdProofDocumentPath,
+                        isCancelled: b.isCancelled === true || b.IsCancelled === true,
+                        cancellationDateTime: b.cancellationDateTime || b.CancellationDateTime,
+                        isPaid: paidBookingIds.has(bId) || Number(b.scheduleEventFees || b.ScheduleEventFees || 0) === 0
+                    };
+                });
 
             setMyBookings(userBookings);
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
-            if (err.response?.status === 401 && location.pathname === '/my-bookings') {
+            if (err.response?.status === 401) {
+                console.log("Session expired. Redirecting to login...");
                 localStorage.clear();
-                navigate('/login');
+                navigate('/login', { state: { from: location.pathname } });
             }
         } finally {
             setLoading(false);
@@ -193,7 +209,12 @@ const UserDashboard = () => {
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+        setFilters(prev => {
+            const newState = { ...prev, [name]: value };
+            // Instant filtering: update appliedFilters on change
+            setAppliedFilters(newState);
+            return newState;
+        });
     };
 
     const handleApplyFilters = () => {
@@ -237,6 +258,9 @@ const UserDashboard = () => {
     // Derived filtering logic
     const filteredEvents = (Array.isArray(events) ? events : []).filter(evt => {
         if (!evt) return false;
+
+        // Note: Booked events are no longer excluded here so consumers can see all upcoming events.
+        // We handle the visual indicator in the render loop.
 
         // 1. Tab Filtering (Upcoming vs Past)
         const eventDateStr = evt.startDate;
@@ -603,8 +627,13 @@ const UserDashboard = () => {
                                                     </div>
                                                     <div className="col-md-7">
                                                         <div className="card-body p-4 d-flex flex-column h-100">
-                                                            <div className="text-uppercase small fw-800 mb-2" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
-                                                                {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.name || "UNCATEGORIZED"}
+                                                            <div className="d-flex justify-content-between align-items-start mb-2">
+                                                                <div className="text-uppercase small fw-800" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
+                                                                    {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.name || "UNCATEGORIZED"}
+                                                                </div>
+                                                                {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) && (
+                                                                    <span className="badge rounded-pill px-2 py-1" style={{ backgroundColor: '#dcfce7', color: '#166534', fontSize: '10px' }}>BOOKED</span>
+                                                                )}
                                                             </div>
                                                             <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4' }}>
                                                                 {evt.details || evt.Details || "Untitled Event"}
@@ -620,20 +649,31 @@ const UserDashboard = () => {
                                                                     <span className="small fw-500 text-truncate">{evt.placeName || evt.PlaceName || "Location TBD"}</span>
                                                                 </div>
 
-                                                                <button
-                                                                    className="btn btn-theme w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
-                                                                    onClick={() => navigate(`/booking/${evt.scheduleEventId || evt.Id}`)}
-                                                                    style={{
-                                                                        backgroundColor: 'var(--theme-orange)',
-                                                                        color: 'black',
-                                                                        border: 'none',
-                                                                        fontSize: '15px',
-                                                                        letterSpacing: '0.5px'
-                                                                    }}
-                                                                >
-                                                                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>local_activity</span>
-                                                                    BOOK EVENT NOW
-                                                                </button>
+                                                                {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) ? (
+                                                                    <button
+                                                                        className="btn btn-outline-success w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                                                        onClick={() => setActiveTab('bookings')}
+                                                                        style={{ fontSize: '15px', letterSpacing: '0.5px' }}
+                                                                    >
+                                                                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>check_circle</span>
+                                                                        ALREADY BOOKED
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        className="btn btn-theme w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                                                        onClick={() => navigate(`/booking/${evt.scheduleEventId || evt.Id}`)}
+                                                                        style={{
+                                                                            backgroundColor: 'var(--theme-orange)',
+                                                                            color: 'black',
+                                                                            border: 'none',
+                                                                            fontSize: '15px',
+                                                                            letterSpacing: '0.5px'
+                                                                        }}
+                                                                    >
+                                                                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>local_activity</span>
+                                                                        BOOK EVENT NOW
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>

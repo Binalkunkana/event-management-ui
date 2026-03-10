@@ -19,12 +19,9 @@ const LandingPage = () => {
     const fetchFilters = async () => {
         try {
             const [catRes, placeRes] = await Promise.all([
-                getAllCategories(),
-                getAllPlaces(),
+                getAllCategories().catch(() => ({ data: { data: [] } })),
+                getAllPlaces().catch(() => ({ data: { data: [] } })),
             ]);
-
-            console.log("Categories Raw:", catRes.data);
-            console.log("Places Raw:", placeRes.data);
 
             const catData = catRes.data.data || catRes.data || [];
             const placeData = placeRes.data.data || placeRes.data || [];
@@ -41,82 +38,108 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="landing-page">
-            <div className="hero-manup">
-                <div className="container">
-                    <div className="row align-items-center">
-                        {/* Left Content */}
-                        <div className="col-lg-6 hero-text-content animate-slide-up">
-                            <span className="hero-date">5 TO 9 MAY 2026, MARDAVALL HOTEL, NEW YORK</span>
-                            <h1 className="hero-heading text-white">
-                                Change Your Mind <br /> To Become Success
-                            </h1>
-                            <button className="btn-hero-cta mb-5" onClick={() => document.getElementById('search-widget').scrollIntoView({ behavior: 'smooth' })}>
-                                Buy Ticket
-                            </button>
+        <div className="landing-page position-relative overflow-hidden">
+            {/* Hero Section */}
+            <section className="ef-hero d-flex align-items-center min-vh-100 position-relative">
+                {/* Enhanced background blurs */}
+                <div className="ef-hero-bg-blur blur-teal position-absolute" style={{ top: '-10%', right: '5%', opacity: '0.6' }}></div>
+                <div className="ef-hero-bg-blur blur-lavender position-absolute" style={{ bottom: '-10%', left: '5%', opacity: '0.6' }}></div>
+                <div className="ef-hero-bg-blur blur-peach position-absolute" style={{ top: '20%', left: '40%', width: '400px', height: '400px', backgroundColor: 'rgba(255, 182, 193, 0.4)' }}></div>
 
-                            {/* Search Widget Integrated here or below */}
-                            <div id="search-widget" className="landing-search-overlay mt-4">
-                                <h5 className="text-white mb-3">Find Your Next Event</h5>
-                                <div className="row g-2">
-                                    <div className="col-md-5">
-                                        <select
-                                            className="form-select border-0"
-                                            value={selectedCategory}
-                                            onChange={(e) => setSelectedCategory(e.target.value)}
-                                        >
-                                            <option value="">Select Category</option>
-                                            {categories.map((cat) => (
-                                                <option key={cat.eventCategoryId || cat.EventCategoryId} value={cat.eventCategoryId || cat.EventCategoryId}>
-                                                    {cat.eventCategoryName || cat.EventCategoryName}
-                                                </option>
-                                            ))}
-                                        </select>
+                <div className="container position-relative z-1">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-10 text-center animate-ef">
+                            <div className="d-inline-flex align-items-center gap-2 ef-badge mb-4 py-2 px-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', color: 'var(--ef-text-primary)' }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>celebration</span>
+                                <span className="fw-800 small text-uppercase" style={{ letterSpacing: '0.1em' }}>New Era of Experiences</span>
+                            </div>
+
+                            <h1 className="display-1 fw-800 mb-4" style={{ letterSpacing: '-0.05em', lineHeight: '1' }}>
+                                Design Your <br />
+                                Perfect <span style={{ color: 'var(--ef-accent-teal)', position: 'relative' }}>
+                                    EventFlow
+                                    <svg viewBox="0 0 200 20" className="position-absolute start-0 bottom-0 w-100" style={{ height: '15px', zIndex: '-1' }}>
+                                        <path d="M0 15 Q50 5 100 15 T200 15" fill="none" stroke="var(--ef-accent-teal)" strokeWidth="4" opacity="0.3" />
+                                    </svg>
+                                </span>
+                            </h1>
+
+                            <p className="lead text-secondary mb-5 mx-auto lh-lg" style={{ maxWidth: '650px', fontSize: '1.25rem' }}>
+                                The modern benchmark for event orchestration. Seamlessly discover, curate, and book world-class gatherings through an interface built for the future.
+                            </p>
+
+                            <div className="d-flex flex-wrap gap-4 justify-content-center mb-5 pb-4">
+                                <button className="btn-pill btn-primary px-5 py-3 shadow-lg" onClick={() => document.getElementById('search-section').scrollIntoView({ behavior: 'smooth' })}>
+                                    Start Exploring
+                                </button>
+                                <button className="btn-pill btn-outline px-5 py-3 bg-white" onClick={() => navigate('/events')}>
+                                    Learn Our Process
+                                </button>
+                            </div>
+
+                            {/* Minimalist Search Bar - Elevated */}
+                            <div id="search-section" className="ef-card p-2 mx-auto animate-ef shadow-xl" style={{ maxWidth: '1000px', animationDelay: '0.2s', borderRadius: '30px' }}>
+                                <div className="row g-2 p-2">
+                                    <div className="col-lg-4">
+                                        <div className="position-relative h-100">
+                                            <span className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary material-symbols-outlined" style={{ fontSize: '20px' }}>category</span>
+                                            <select
+                                                className="ef-input ps-5 h-100"
+                                                value={selectedCategory}
+                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                style={{ border: 'none', backgroundColor: '#f9f9f9' }}
+                                            >
+                                                <option value="">Any Category</option>
+                                                {categories.map((cat) => (
+                                                    <option key={cat.eventCategoryId || cat.EventCategoryId} value={cat.eventCategoryId || cat.EventCategoryId}>
+                                                        {cat.eventCategoryName || cat.EventCategoryName || cat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="col-md-4">
-                                        <select
-                                            className="form-select border-0"
-                                            value={selectedPlace}
-                                            onChange={(e) => setSelectedPlace(e.target.value)}
-                                        >
-                                            <option value="">Select Place</option>
-                                            {places.map((place) => (
-                                                <option key={place.placeId || place.PlaceId} value={place.placeId || place.PlaceId}>
-                                                    {place.placeName || place.PlaceName}
-                                                </option>
-                                            ))}
-                                        </select>
+                                    <div className="col-lg-3">
+                                        <div className="position-relative h-100">
+                                            <span className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary material-symbols-outlined" style={{ fontSize: '20px' }}>location_on</span>
+                                            <select
+                                                className="ef-input ps-5 h-100"
+                                                value={selectedPlace}
+                                                onChange={(e) => setSelectedPlace(e.target.value)}
+                                                style={{ border: 'none', backgroundColor: '#f9f9f9' }}
+                                            >
+                                                <option value="">Everywhere</option>
+                                                {places.map((place) => (
+                                                    <option key={place.placeId || place.PlaceId} value={place.placeId || place.PlaceId}>
+                                                        {place.placeName || place.PlaceName || place.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="col-md-3">
-                                        <input
-                                            type="date"
-                                            className="form-select border-0"
-                                            value={selectedDate}
-                                            onChange={(e) => setSelectedDate(e.target.value)}
-                                        />
+                                    <div className="col-lg-3">
+                                        <div className="position-relative h-100">
+                                            <span className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary material-symbols-outlined" style={{ fontSize: '20px' }}>calendar_month</span>
+                                            <input
+                                                type="date"
+                                                className="ef-input ps-5 h-100"
+                                                value={selectedDate}
+                                                onChange={(e) => setSelectedDate(e.target.value)}
+                                                style={{ border: 'none', backgroundColor: '#f9f9f9' }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="col-md-2">
-                                        <button className="btn btn-warning w-100 fw-bold" onClick={handleSearch}>
+                                    <div className="col-lg-2">
+                                        <button className="btn-pill btn-primary w-100 h-100 py-3 d-flex align-items-center justify-content-center gap-2" onClick={handleSearch}>
+                                            <span className="material-symbols-outlined">search</span>
                                             Search
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Right Image (Man) */}
-                        <div className="col-lg-6 d-none d-lg-block text-end">
-                            {/* Placeholder for the "Man" image from the template */}
-                            <img
-                                src="https://mediacity.co.in/manup/img/bg-img/man.png"
-                                alt="Speaker"
-                                className="hero-man-image img-fluid"
-                                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800' }} // Fallback if direct link fails
-                            />
-                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     );
 };

@@ -321,388 +321,262 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="container-fluid" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', padding: '2rem' }}>
-            <div className="row">
-                {/* Sidebar Filters */}
-                <div className="col-md-3">
-                    <div className="bg-white p-4 rounded shadow-sm" style={{ position: 'sticky', top: '24px' }}>
-                        <h5 className="mb-4 fw-bold" style={{ color: 'var(--matdash-text-dark)' }}>Filter Events</h5>
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-primary)', minHeight: '100vh' }}>
+            <div className="container">
+                <div className="row g-4">
+                    {/* Sidebar Filters */}
+                    <div className="col-lg-3">
+                        <div className="dashboard-sidebar animate-ef">
+                            <h5 className="fw-800 mb-4">Filters</h5>
 
-                        <div className="mb-3">
-                            <label className="form-label fw-bold small text-muted">LOCATION</label>
-                            <select
-                                className="form-select border-light shadow-none"
-                                name="location"
-                                value={filters.location}
-                                onChange={handleFilterChange}
-                                style={{ borderRadius: '8px', padding: '10px' }}
-                            >
-                                <option value="">All Locations</option>
-                                {Array.isArray(places) && places.map(p => (
-                                    <option key={p.id} value={p.id}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label fw-bold small text-muted">SEARCH BY NAME</label>
-                            <input
-                                type="text"
-                                className="form-control border-light shadow-none"
-                                placeholder="Event name..."
-                                name="name"
-                                value={filters.name}
-                                onChange={handleFilterChange}
-                                style={{ borderRadius: '8px', padding: '10px' }}
-                            />
-                        </div>
-
-                        <div className="mb-3">
-                            <label className="form-label fw-bold small text-muted">CATEGORY</label>
-                            <select
-                                className="form-select border-light shadow-none"
-                                name="category"
-                                value={filters.category}
-                                onChange={handleFilterChange}
-                                style={{ borderRadius: '8px', padding: '10px' }}
-                            >
-                                <option value="">All Categories</option>
-                                {Array.isArray(categories) && categories.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="form-label fw-bold small text-muted">PRICE TYPE</label>
-                            <select
-                                className="form-select border-light shadow-none"
-                                name="priceType"
-                                value={filters.priceType}
-                                onChange={handleFilterChange}
-                                style={{ borderRadius: '8px', padding: '10px' }}
-                            >
-                                <option value="All">All Events</option>
-                                <option value="Paid Event">Paid Event</option>
-                                <option value="Free Event">Free Event</option>
-                            </select>
-                        </div>
-
-                        <button
-                            className="btn btn-theme w-100 fw-bold py-2 shadow-sm mb-2"
-                            onClick={handleApplyFilters}
-                            style={{ backgroundColor: 'var(--theme-orange)', border: 'none', borderRadius: '8px', color: 'black' }}
-                        >
-                            Apply Filters
-                        </button>
-
-                        <button
-                            className="btn btn-light w-100 fw-bold py-2 shadow-sm"
-                            onClick={handleResetFilters}
-                            style={{ border: 'none', borderRadius: '8px' }}
-                        >
-                            Reset
-                        </button>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="col-md-9">
-                    <div className="bg-white p-4 rounded shadow-sm">
-                        {/* Tabs */}
-                        <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                            <ul className="nav nav-tabs border-0">
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link border-0 bg-transparent fw-bold ${activeTab === 'upcoming' ? 'active' : 'text-muted'}`}
-                                        style={activeTab === 'upcoming' ? { borderBottom: '3px solid var(--theme-orange)', color: 'var(--theme-orange)' } : {}}
-                                        onClick={() => setActiveTab('upcoming')}
-                                    >
-                                        Upcoming Events
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link border-0 bg-transparent fw-bold ${activeTab === 'past' ? 'active' : 'text-muted'}`}
-                                        style={activeTab === 'past' ? { borderBottom: '3px solid var(--theme-orange)', color: 'var(--theme-orange)' } : {}}
-                                        onClick={() => setActiveTab('past')}
-                                    >
-                                        Past Events
-                                    </button>
-                                </li>
-                                <li className="nav-item">
-                                    <button
-                                        className={`nav-link border-0 bg-transparent fw-bold ${activeTab === 'bookings' ? 'active' : 'text-muted'}`}
-                                        style={activeTab === 'bookings' ? { borderBottom: '3px solid var(--theme-orange)', color: 'var(--theme-orange)' } : {}}
-                                        onClick={() => {
-                                            if (!localStorage.getItem("token")) {
-                                                navigate('/login', { state: { from: '/my-bookings' } });
-                                            } else {
-                                                setActiveTab('bookings');
-                                            }
-                                        }}
-                                    >
-                                        My Bookings
-                                    </button>
-                                </li>
-                            </ul>
-                            <div className="d-flex align-items-center gap-3">
-                                {localStorage.getItem("token") && (
-                                    <div className="text-muted small">
-                                        Showing <strong>{activeTab === 'bookings' ? myBookings.length : filteredEvents.length}</strong> {activeTab === 'bookings' ? 'bookings' : 'events'}
-                                    </div>
-                                )}
-                                {!localStorage.getItem("token") && (
-                                    <div className="text-muted small">
-                                        Showing <strong>{filteredEvents.length}</strong> events
-                                    </div>
-                                )}
-                                <button
-                                    className="btn btn-sm btn-outline-secondary border-0 d-flex align-items-center"
-                                    onClick={fetchData}
-                                    title="Refresh Data"
+                            <div className="mb-4">
+                                <label className="ef-label">Location</label>
+                                <select
+                                    className="ef-input"
+                                    name="location"
+                                    value={filters.location}
+                                    onChange={handleFilterChange}
                                 >
-                                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
+                                    <option value="">All Locations</option>
+                                    {Array.isArray(places) && places.map(p => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="ef-label">Search</label>
+                                <input
+                                    type="text"
+                                    className="ef-input"
+                                    placeholder="Event name..."
+                                    name="name"
+                                    value={filters.name}
+                                    onChange={handleFilterChange}
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="ef-label">Category</label>
+                                <select
+                                    className="ef-input"
+                                    name="category"
+                                    value={filters.category}
+                                    onChange={handleFilterChange}
+                                >
+                                    <option value="">All Categories</option>
+                                    {Array.isArray(categories) && categories.map(c => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="ef-label">Access</label>
+                                <select
+                                    className="ef-input"
+                                    name="priceType"
+                                    value={filters.priceType}
+                                    onChange={handleFilterChange}
+                                >
+                                    <option value="All">All Events</option>
+                                    <option value="Paid Event">Paid</option>
+                                    <option value="Free Event">Free</option>
+                                </select>
+                            </div>
+
+                            <div className="d-flex flex-column gap-2">
+                                <button className="btn-pill btn-primary w-100 py-2" onClick={handleApplyFilters}>
+                                    Apply
+                                </button>
+                                <button className="btn-pill btn-outline w-100 py-2" onClick={handleResetFilters}>
+                                    Reset
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="col-lg-9">
+                        {/* Tabs */}
+                        <div className="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3 animate-ef">
+                            <div className="d-flex gap-2 p-1 bg-white rounded-pill border border-light shadow-sm">
+                                <button
+                                    className={`btn-pill border-0 px-4 py-2 ${activeTab === 'upcoming' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                    onClick={() => setActiveTab('upcoming')}
+                                    style={{ fontSize: '0.85rem' }}
+                                >
+                                    Upcoming
+                                </button>
+                                <button
+                                    className={`btn-pill border-0 px-4 py-2 ${activeTab === 'past' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                    onClick={() => setActiveTab('past')}
+                                    style={{ fontSize: '0.85rem' }}
+                                >
+                                    Past
+                                </button>
+                                <button
+                                    className={`btn-pill border-0 px-4 py-2 ${activeTab === 'bookings' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                    onClick={() => {
+                                        if (!localStorage.getItem("token")) {
+                                            navigate('/login', { state: { from: '/my-bookings' } });
+                                        } else {
+                                            setActiveTab('bookings');
+                                        }
+                                    }}
+                                    style={{ fontSize: '0.85rem' }}
+                                >
+                                    My Bookings
+                                </button>
+                            </div>
+
+                            <button className="btn-pill btn-outline py-2 px-3" onClick={fetchData}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>refresh</span>
+                            </button>
                         </div>
 
                         {/* Grid */}
                         {loading ? (
                             <div className="text-center py-5">
-                                <div className="spinner-border text-warning" role="status"></div>
-                                <p className="mt-2 text-muted">Fetching data...</p>
+                                <div className="spinner-border text-dark" role="status"></div>
+                                <p className="mt-3 ef-label">Loading EventFlow...</p>
                             </div>
-                        ) : activeTab === 'bookings' ? (
-                            <div className="row g-4">
-                                {myBookings.length > 0 ? (
-                                    myBookings.map((bk) => {
-                                        const event = events.find(e => e.scheduleEventId == bk.scheduleEventId);
-                                        return (
-                                            <div key={bk.eventBookingId} className="col-12 col-xl-6">
-                                                <div className="card h-100 border-0 shadow-sm event-dashboard-card" style={{ borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s ease', border: '1px solid #eee' }}>
-                                                    <div className="row g-0 h-100">
-                                                        <div className="col-md-5">
-                                                            <div className="position-relative h-100" style={{ minHeight: '200px', backgroundColor: '#f0f2f5' }}>
-                                                                {event?.imagePath ? (
-                                                                    <img
-                                                                        src={`https://localhost:7187/EventImages/${event.imagePath}`}
-                                                                        alt={event.details || 'Event'}
-                                                                        className="w-100 h-100 object-fit-cover"
-                                                                        onError={(e) => {
-                                                                            e.target.onerror = null;
-                                                                            e.target.src = 'https://via.placeholder.com/400x300?text=Event+Image';
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="h-100 d-flex align-items-center justify-content-center">
-                                                                        <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#cbd5e0' }}>event</span>
-                                                                    </div>
-                                                                )}
-                                                                <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
+                        ) : (
+                            <div className="row g-4 animate-ef" style={{ animationDelay: '0.1s' }}>
+                                {activeTab === 'bookings' ? (
+                                    myBookings.length > 0 ? (
+                                        myBookings.map((bk) => {
+                                            const event = events.find(e => e.scheduleEventId == bk.scheduleEventId);
+                                            return (
+                                                <div key={bk.eventBookingId} className="col-12 col-md-6">
+                                                    <div className="ef-card h-100 p-0 overflow-hidden d-flex flex-column">
+                                                        <div className="position-relative" style={{ height: '180px' }}>
+                                                            {event?.imagePath ? (
+                                                                <img
+                                                                    src={`https://localhost:7187/EventImages/${event.imagePath}`}
+                                                                    alt={event.details}
+                                                                    className="w-100 h-100 object-fit-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                                                    <span className="material-symbols-outlined text-muted" style={{ fontSize: '48px' }}>event</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="position-absolute top-0 end-0 m-3">
+                                                                <span className="ef-badge bg-white shadow-sm" style={{ color: 'var(--ef-text-primary)' }}>
                                                                     {Number(bk.scheduleEventFees || event?.fees || 0) === 0 ? "FREE" : `₹${bk.scheduleEventFees || event?.fees || 0}`}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <div className="col-md-7">
-                                                            <div className="card-body p-4 d-flex flex-column h-100">
-                                                                <div className="d-flex justify-content-between align-items-start mb-2">
-                                                                    <div className="text-uppercase small fw-800" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
-                                                                        {event?.eventCategoryName || bk.ScheduleEventCategory || "BOOKED EVENT"}
-                                                                    </div>
-                                                                    <div className="d-flex flex-column gap-1 align-items-end">
-                                                                        <span className="badge" style={{ backgroundColor: bk.isCancelled ? '#fee2e2' : '#dcfce7', color: bk.isCancelled ? '#991b1b' : '#166534', fontSize: '10px' }}>
-                                                                            {bk.isCancelled ? 'CANCELLED' : 'ACTIVE'}
-                                                                        </span>
-                                                                        {!bk.isCancelled && (
-                                                                            <span className="badge" style={{ backgroundColor: bk.isPaid ? '#dcfce7' : '#fef3c7', color: bk.isPaid ? '#166534' : '#92400e', fontSize: '10px' }}>
-                                                                                {bk.isPaid ? 'PAID' : 'PENDING'}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4', fontSize: '1.1rem' }}>
-                                                                    {event?.details || bk.scheduleEventDetails || "Untitled Event"}
-                                                                </h4>
-
-                                                                <div className="mb-3">
-                                                                    <div className="d-flex align-items-center mb-1 text-secondary">
-                                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>calendar_month</span>
-                                                                        <span className="small fw-500">{event ? formatDate(event.startDate) : "Date TBD"}</span>
-                                                                    </div>
-                                                                    <div className="d-flex align-items-center text-secondary">
-                                                                        <span className="material-symbols-outlined me-2" style={{ fontSize: '18px' }}>location_on</span>
-                                                                        <span className="small fw-500 text-truncate">{event?.placeName || "Location TBD"}</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="mb-2">
-                                                                    <span className="badge" style={{ backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '10px' }}>
-                                                                        ID: {bk.eventBookingId}
+                                                        <div className="p-4 d-flex flex-column flex-grow-1">
+                                                            <div className="d-flex justify-content-between align-items-start mb-2">
+                                                                <span className="ef-label mb-0" style={{ color: 'var(--ef-accent-teal)' }}>
+                                                                    {event?.eventCategoryName || "Event"}
+                                                                </span>
+                                                                <div className="d-flex gap-1">
+                                                                    <span className={`ef-badge ${bk.isCancelled ? 'bg-danger text-white' : 'bg-success text-white'}`}>
+                                                                        {bk.isCancelled ? 'Cancelled' : 'Active'}
                                                                     </span>
                                                                 </div>
-                                                                <div className="mt-auto pt-3 border-top">
-                                                                    <div className="d-flex gap-2 flex-wrap">
-                                                                        {!bk.isCancelled && bk.isPaid && (
-                                                                            <button
-                                                                                className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold flex-grow-1"
-                                                                                onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}
-                                                                            >
-                                                                                Receipt
-                                                                            </button>
-                                                                        )}
-                                                                        {!bk.isCancelled && !bk.isPaid && (
-                                                                            <button
-                                                                                className="btn btn-warning btn-sm rounded-pill px-3 fw-bold flex-grow-1"
-                                                                                onClick={() => navigate(`/payment/${bk.eventBookingId}`)}
-                                                                                style={{ backgroundColor: 'var(--theme-orange)', border: 'none', color: 'black' }}
-                                                                            >
-                                                                                Pay Now
-                                                                            </button>
-                                                                        )}
-                                                                        {!bk.isCancelled && (
-                                                                            <button
-                                                                                className="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold flex-grow-1"
-                                                                                onClick={() => handleCancelBooking(bk)}
-                                                                            >
-                                                                                Cancel
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                    {bk.isCancelled && bk.cancellationDateTime && (
-                                                                        <div className="mt-2 text-center">
-                                                                            <span className="text-muted" style={{ fontSize: '10px' }}>
-                                                                                Cancelled on: {new Date(bk.cancellationDateTime).toLocaleDateString()}
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                            </div>
+                                                            <h5 className="fw-800 mb-3">{event?.details || bk.scheduleEventDetails}</h5>
+
+                                                            <div className="mt-auto pt-3 border-top border-light d-flex flex-wrap gap-2">
+                                                                {!bk.isCancelled && bk.isPaid && (
+                                                                    <button className="btn-pill btn-outline py-1 px-3 small" onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}>
+                                                                        Receipt
+                                                                    </button>
+                                                                )}
+                                                                {!bk.isCancelled && !bk.isPaid && (
+                                                                    <button className="btn-pill btn-primary py-1 px-3 small" onClick={() => navigate(`/payment/${bk.eventBookingId}`)}>
+                                                                        Pay
+                                                                    </button>
+                                                                )}
+                                                                {!bk.isCancelled && (
+                                                                    <button className="btn-pill btn-outline py-1 px-3 small text-danger" onClick={() => handleCancelBooking(bk)}>
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="col-12 text-center py-5">
+                                            <p className="text-secondary">No bookings found.</p>
+                                        </div>
+                                    )
                                 ) : (
-                                    <div className="col-12 text-center py-5">
-                                        <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#eee' }}>book_online</span>
-                                        <h5 className="mt-3 text-muted">You haven't booked any events yet.</h5>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="row g-4">
-                                {filteredEvents.length > 0 ? (
-                                    filteredEvents.map((evt) => (
-                                        <div key={evt.scheduleEventId || evt.Id || Math.random()} className="col-12 col-xl-6">
-                                            <div className="card h-100 border-0 shadow-sm event-dashboard-card" style={{ borderRadius: '20px', overflow: 'hidden', transition: 'all 0.3s ease', border: '1px solid #eee' }}>
-                                                <div className="row g-0 h-100">
-                                                    <div className="col-md-5">
-                                                        <div className="position-relative h-100" style={{ minHeight: '200px', backgroundColor: '#f0f2f5' }}>
-                                                            {evt.imagePath && (
-                                                                <img
-                                                                    src={`https://localhost:7187/EventImages/${evt.imagePath}`}
-                                                                    alt={evt.details || 'Event'}
-                                                                    className="w-100 h-100 object-fit-cover"
-                                                                    onError={(e) => {
-                                                                        e.target.onerror = null;
-                                                                        e.target.src = 'https://via.placeholder.com/400x300?text=Event+Image';
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            {!evt.imagePath && (
-                                                                <div className="h-100 d-flex align-items-center justify-content-center">
-                                                                    <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#cbd5e0' }}>event</span>
-                                                                </div>
-                                                            )}
-                                                            <span className="position-absolute top-0 start-0 m-3 badge rounded-pill px-3 py-2 shadow-sm" style={{ backgroundColor: 'white', color: 'var(--theme-orange)', fontWeight: '800', border: '1px solid #ffe8cc' }}>
-                                                                {Number(evt.fees || evt.Fees || 0) === 0 ? "FREE" : `₹${evt.fees || evt.Fees || 0}`}
+                                    filteredEvents.length > 0 ? (
+                                        filteredEvents.map((evt) => (
+                                            <div key={evt.scheduleEventId} className="col-12 col-md-6">
+                                                <div className="ef-card h-100 p-0 overflow-hidden d-flex flex-column">
+                                                    <div className="position-relative" style={{ height: '200px' }}>
+                                                        {evt.imagePath ? (
+                                                            <img
+                                                                src={`https://localhost:7187/EventImages/${evt.imagePath}`}
+                                                                alt={evt.details}
+                                                                className="w-100 h-100 object-fit-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                                                <span className="material-symbols-outlined text-muted" style={{ fontSize: '48px' }}>event</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="position-absolute bottom-0 start-0 m-3">
+                                                            <span className="ef-badge bg-white shadow-sm">
+                                                                {Number(evt.fees || 0) === 0 ? "FREE" : `₹${evt.fees}`}
                                                             </span>
                                                         </div>
+                                                        {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) && (
+                                                            <div className="position-absolute top-0 end-0 m-3">
+                                                                <span className="ef-badge bg-success text-white shadow-sm">BOOKED</span>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="col-md-7">
-                                                        <div className="card-body p-4 d-flex flex-column h-100">
-                                                            <div className="d-flex justify-content-between align-items-start mb-2">
-                                                                <div className="text-uppercase small fw-800" style={{ color: 'var(--theme-orange)', letterSpacing: '1.5px' }}>
-                                                                    {evt.eventCategoryName || evt.EventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.eventCategoryName || categories.find(c => (c.eventCategoryId || c.EventCategoryId || c.id || c.Id) == (evt.eventCategoryId || evt.EventCategoryId))?.name || "UNCATEGORIZED"}
-                                                                </div>
-                                                                {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) && (
-                                                                    <span className="badge rounded-pill px-2 py-1" style={{ backgroundColor: '#dcfce7', color: '#166534', fontSize: '10px' }}>BOOKED</span>
-                                                                )}
-                                                            </div>
-                                                            <h4 className="card-title fw-bold mb-3" style={{ color: '#2d3748', lineHeight: '1.4' }}>
-                                                                {evt.details || evt.Details || "Untitled Event"}
-                                                            </h4>
+                                                    <div className="p-4 d-flex flex-column flex-grow-1">
+                                                        <span className="ef-label mb-2" style={{ color: 'var(--ef-accent-teal)' }}>
+                                                            {evt.eventCategoryName || "General"}
+                                                        </span>
+                                                        <h5 className="fw-800 mb-3">{evt.details}</h5>
 
-                                                            <div className="mt-auto">
-                                                                <div className="d-flex align-items-center mb-2 text-secondary">
-                                                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '20px' }}>calendar_month</span>
-                                                                    <span className="small fw-500">{formatDate(evt.startDate || evt.StartDate || evt.eventDate || evt.EventDate || evt.startTime || evt.StartTime)}</span>
-                                                                </div>
-                                                                <div className="d-flex align-items-center mb-4 text-secondary">
-                                                                    <span className="material-symbols-outlined me-2" style={{ fontSize: '20px' }}>location_on</span>
-                                                                    <span className="small fw-500 text-truncate">{evt.placeName || evt.PlaceName || "Location TBD"}</span>
-                                                                </div>
+                                                        <div className="d-flex align-items-center gap-2 text-secondary small mb-4">
+                                                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>location_on</span>
+                                                            {evt.placeName}
+                                                        </div>
 
-                                                                {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) ? (
-                                                                    <button
-                                                                        className="btn btn-outline-success w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
-                                                                        onClick={() => setActiveTab('bookings')}
-                                                                        style={{ fontSize: '15px', letterSpacing: '0.5px' }}
-                                                                    >
-                                                                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>check_circle</span>
-                                                                        ALREADY BOOKED
-                                                                    </button>
-                                                                ) : (
-                                                                    <button
-                                                                        className="btn btn-theme w-100 fw-bold py-3 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2"
-                                                                        onClick={() => navigate(`/booking/${evt.scheduleEventId || evt.Id}`)}
-                                                                        style={{
-                                                                            backgroundColor: 'var(--theme-orange)',
-                                                                            color: 'black',
-                                                                            border: 'none',
-                                                                            fontSize: '15px',
-                                                                            letterSpacing: '0.5px'
-                                                                        }}
-                                                                    >
-                                                                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>local_activity</span>
-                                                                        BOOK EVENT NOW
-                                                                    </button>
-                                                                )}
-                                                            </div>
+                                                        <div className="mt-auto">
+                                                            {myBookings.some(bk => String(bk.scheduleEventId) === String(evt.scheduleEventId) && !bk.isCancelled) ? (
+                                                                <button className="btn-pill btn-outline w-100" onClick={() => setActiveTab('bookings')}>
+                                                                    View Booking
+                                                                </button>
+                                                            ) : (
+                                                                <button className="btn-pill btn-primary w-100" onClick={() => navigate(`/booking/${evt.scheduleEventId}`)}>
+                                                                    Book Now
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div className="col-12 text-center py-5">
+                                            <p className="text-secondary">No events matching your filters.</p>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="col-12 text-center py-5">
-                                        <span className="material-symbols-outlined" style={{ fontSize: '64px', color: '#eee' }}>event_busy</span>
-                                        <h5 className="mt-3 text-muted">No events found matching your search.</h5>
-                                    </div>
+                                    )
                                 )}
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                .event-dashboard-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important;
-                }
-                .fw-800 { font-weight: 800; }
-                .btn-theme:active {
-                    transform: scale(0.98);
-                }
-            `}</style>
         </div>
     );
 };

@@ -71,82 +71,105 @@ const ReceiptPage = () => {
     const { booking, payment, event } = data;
 
     return (
-        <div className="container py-5">
-            <div className="row justify-content-center">
-                <div className="col-md-8">
-                    <div className="text-center mb-5 mt-4">
-                        <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '4rem' }}></i>
-                        <h2 className="fw-bold mt-3">Booking Confirmed!</h2>
-                        <p className="text-muted">Thank you for booking with Manup. Your ticket is ready.</p>
-
-                        <div className="mt-4">
-                            <button className="btn btn-primary px-4 py-2 me-3" onClick={handlePrint}>
-                                <i className="bi bi-printer me-2"></i> Print Receipt
-                            </button>
-                            <button className="btn btn-outline-dark px-4 py-2" onClick={() => navigate('/userdashboard')}>
-                                Go to Dashboard
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="card shadow border-0" id="receipt-content">
-                        <div className="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 className="mb-0 fw-bold">Manup</h3>
-                                <small className="opacity-75">Event Management Receipt</small>
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-primary)', minHeight: '100vh' }}>
+            <div className="container">
+                <div className="row justify-content-center">
+                    <div className="col-lg-8">
+                        <div className="text-center mb-5 animate-ef">
+                            <div className="d-inline-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm p-4 mb-4">
+                                <span className="material-symbols-outlined text-success" style={{ fontSize: '4rem' }}>check_circle</span>
                             </div>
-                            <div className="text-end">
-                                <div className="badge bg-warning text-dark">PAID</div>
-                                <div className="small mt-1">Ref: {payment?.transactionId || `REF-${bookingId}`}</div>
+                            <h1 className="fw-800 display-5 mb-2">Booking Confirmed</h1>
+                            <p className="ef-label text-secondary">Your journey with EventFlow begins here</p>
+
+                            <div className="mt-5 d-flex justify-content-center gap-3 no-print">
+                                <button className="btn-pill btn-primary px-4 py-2 shadow" onClick={handlePrint}>
+                                    <span className="material-symbols-outlined align-middle me-2">print</span>
+                                    Print Receipt
+                                </button>
+                                <button className="btn-pill btn-outline px-4 py-2" onClick={() => navigate('/userdashboard')}>
+                                    <span className="material-symbols-outlined align-middle me-2">dashboard</span>
+                                    My Dashboard
+                                </button>
                             </div>
                         </div>
-                        <div className="card-body p-5">
-                            <div className="row mb-5">
-                                <div className="col-6">
-                                    <h6 className="fw-bold text-muted mb-2">Customer Details</h6>
-                                    <p className="mb-0 fw-bold">{booking.name}</p>
-                                    <p className="mb-0 small text-muted">{booking.email}</p>
-                                    <p className="mb-0 small text-muted">{booking.phone}</p>
+
+                        <div className="ef-card p-0 overflow-hidden shadow-lg animate-ef" id="receipt-content" style={{ animationDelay: '0.1s' }}>
+                            <div className="bg-dark text-white p-5 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 className="fw-800 mb-1" style={{ letterSpacing: '-1px' }}>EventFlow.</h4>
+                                    <p className="ef-label mb-0 opacity-75">Electronic Admission Ticket</p>
                                 </div>
-                                <div className="col-6 text-end">
-                                    <h6 className="fw-bold text-muted mb-2">Booking Info</h6>
-                                    <p className="mb-0 small text-muted">Date: {new Date().toLocaleDateString()}</p>
-                                    <p className="mb-0 small text-muted">Method: {payment?.paymentMethod || "Direct"}</p>
+                                <div className="text-end">
+                                    <span className="ef-badge bg-white text-dark mb-2">OFFICIAL RECEIPT</span>
+                                    <div className="small opacity-50">Trans ID: {payment?.transactionId || `EF-${bookingId}`}</div>
                                 </div>
                             </div>
 
-                            <table className="table table-bordered mt-4">
-                                <thead className="table-light">
-                                    <tr>
-                                        <th>Event Description</th>
-                                        <th className="text-end" style={{ width: '150px' }}>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <div className="fw-bold">{event.title}</div>
-                                            <small className="text-muted">{new Date(event.startDate).toLocaleDateString()} at {event.placeName || "Venue"}</small>
-                                        </td>
-                                        <td className="text-end fw-bold">₹{booking.scheduleEventFees || event.fees || 0}</td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr className="table-light">
-                                        <th className="text-end">Total Paid</th>
-                                        <th className="text-end text-primary h5 fw-bold">₹{booking.scheduleEventFees || event.fees || 0}</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <div className="p-5">
+                                <div className="row g-4 mb-5">
+                                    <div className="col-sm-6">
+                                        <h6 className="ef-label text-secondary">Registrant Details</h6>
+                                        <h5 className="fw-800 mb-1">{booking.name}</h5>
+                                        <p className="text-secondary mb-0">{booking.email}</p>
+                                        <p className="text-secondary mb-0">{booking.phone}</p>
+                                    </div>
+                                    <div className="col-sm-6 text-sm-end">
+                                        <h6 className="ef-label text-secondary">Event Information</h6>
+                                        <p className="text-secondary mb-0">Issued: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p className="text-secondary mb-0">Status: <span className="text-success fw-800">Confirmed & Paid</span></p>
+                                    </div>
+                                </div>
 
-                            <div className="mt-5 text-center pt-4 border-top">
-                                <p className="mb-0 text-muted small">This is a system generated receipt and does not require a signature.</p>
-                                <p className="fw-bold text-primary mb-0">Manup - Perfect Events, Every Time.</p>
+                                <div className="table-responsive mb-5">
+                                    <table className="table bg-transparent">
+                                        <thead>
+                                            <tr>
+                                                <th className="ef-label border-0 px-0">Experience Description</th>
+                                                <th className="ef-label border-0 px-0 text-end">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-top border-light">
+                                                <td className="py-4 px-0">
+                                                    <h5 className="fw-800 mb-1">{event.title || event.details}</h5>
+                                                    <div className="d-flex align-items-center gap-2 text-secondary small">
+                                                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>location_on</span>
+                                                        {event.placeName || "Venue Confirmed"}
+                                                    </div>
+                                                </td>
+                                                <td className="py-4 px-0 text-end fw-800 h5">
+                                                    ₹{booking.scheduleEventFees || event.fees || 0}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr className="border-top-0">
+                                                <td className="pt-4 px-0 ef-label h4 fw-800 text-dark">Total Investment</td>
+                                                <td className="pt-4 px-0 text-end h3 fw-800 text-dark">₹{booking.scheduleEventFees || event.fees || 0}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <div className="bg-light p-4 rounded-4 text-center mt-5">
+                                    <p className="mb-2 text-secondary small">This is an automated confirmation of purchase.</p>
+                                    <h6 className="fw-800 text-dark mb-0">EventFlow — Redefining Experiences.</h6>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    body { background: white !important; }
+                    .ef-card { box-shadow: none !important; border: 1px solid #eee !important; }
+                    .container-fluid { padding: 0 !important; }
+                }
+            `}</style>
         </div>
     );
 };

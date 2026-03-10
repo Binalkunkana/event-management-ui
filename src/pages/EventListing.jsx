@@ -51,50 +51,82 @@ const EventListing = () => {
     };
 
     return (
-        <div className="container py-5">
-            <h2 className="mb-4 fw-bold">Available Events</h2>
-
-            {loading ? (
-                <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status"></div>
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-secondary)', minHeight: '100vh' }}>
+            <div className="container">
+                <div className="d-flex justify-content-between align-items-end mb-5 animate-ef">
+                    <div>
+                        <h1 className="fw-800 mb-2">Available Events</h1>
+                        <p className="ef-label text-secondary mb-0">Discover and book extraordinary experiences</p>
+                    </div>
                 </div>
-            ) : (
-                <div className="row g-4">
-                    {events.length > 0 ? (
-                        events.map((event) => (
-                            <div className="col-md-4" key={event.scheduleEventId}>
-                                <div className="card h-100 shadow-sm border-0">
-                                    <div className="bg-light d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
-                                        <i className="bi bi-image text-muted" style={{ fontSize: '3rem' }}></i>
-                                    </div>
-                                    <div className="card-body">
-                                        <span className="badge bg-info text-dark mb-2">{event.eventCategoryName || "Category"}</span>
-                                        <h5 className="card-title fw-bold">{event.title || "Event Title"}</h5>
 
-                                        <div className="small text-muted mb-3">
-                                            <div className="mb-1"><i className="bi bi-calendar3 me-2"></i>{event.startDate || "Date TBD"}</div>
-                                            <div><i className="bi bi-geo-alt me-2"></i>{event.placeName || "Location TBD"}</div>
+                {loading ? (
+                    <div className="text-center py-5">
+                        <div className="spinner-border text-dark" role="status"></div>
+                        <p className="mt-3 ef-label">Finding events for you...</p>
+                    </div>
+                ) : (
+                    <div className="row g-4 animate-ef" style={{ animationDelay: '0.1s' }}>
+                        {events.length > 0 ? (
+                            events.map((event) => (
+                                <div className="col-12 col-md-6 col-lg-4" key={event.scheduleEventId}>
+                                    <div className="ef-card h-100 p-0 overflow-hidden d-flex flex-column shadow-hover">
+                                        <div className="position-relative" style={{ height: '220px' }}>
+                                            {event.imagePath ? (
+                                                <img
+                                                    src={`https://localhost:7187/EventImages/${event.imagePath}`}
+                                                    alt={event.title}
+                                                    className="w-100 h-100 object-fit-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                                    <span className="material-symbols-outlined text-muted" style={{ fontSize: '48px' }}>image</span>
+                                                </div>
+                                            )}
+                                            <div className="position-absolute bottom-0 start-0 m-3">
+                                                <span className="ef-badge bg-white shadow-sm">
+                                                    {event.eventCategoryName || "General"}
+                                                </span>
+                                            </div>
                                         </div>
+                                        <div className="p-4 d-flex flex-column flex-grow-1">
+                                            <h4 className="fw-800 mb-3">{event.title || event.details || "Event Title"}</h4>
 
-                                        <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                                            <span className="h5 fw-bold text-primary mb-0">₹{event.price || 0}</span>
-                                            <div className="btn-group">
-                                                <Link to={`/events/${event.scheduleEventId}`} className="btn btn-outline-primary btn-sm">View</Link>
-                                                <Link to={`/booking/${event.scheduleEventId}`} className="btn btn-primary btn-sm">Book</Link>
+                                            <div className="d-flex flex-column gap-2 mb-4">
+                                                <div className="d-flex align-items-center gap-2 text-secondary small">
+                                                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>calendar_month</span>
+                                                    {event.startDate || "Date TBD"}
+                                                </div>
+                                                <div className="d-flex align-items-center gap-2 text-secondary small">
+                                                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>location_on</span>
+                                                    {event.placeName || "Location TBD"}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-auto pt-3 border-top border-light d-flex justify-content-between align-items-center">
+                                                <span className="h5 fw-800 mb-0">₹{event.fees || event.Fees || 0}</span>
+                                                <div className="d-flex gap-2">
+                                                    <Link to={`/events/${event.scheduleEventId}`} className="btn-pill btn-outline py-2 px-3 small">Details</Link>
+                                                    <Link to={`/booking/${event.scheduleEventId}`} className="btn-pill btn-primary py-2 px-3 small">Book Now</Link>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="col-12 text-center py-5">
+                                <span className="material-symbols-outlined text-muted mb-3" style={{ fontSize: '64px' }}>search_off</span>
+                                <h3 className="fw-800">No events found</h3>
+                                <p className="text-secondary">Try adjusting your filters or browsing all categories.</p>
+                                <button className="btn-pill btn-primary mt-3 px-4" onClick={() => (window.location.href = '/events')}>
+                                    Browse All Events
+                                </button>
                             </div>
-                        ))
-                    ) : (
-                        <div className="col-12 text-center py-5">
-                            <h4>No events found</h4>
-                            <p className="text-muted">Try adjusting your filters.</p>
-                        </div>
-                    )}
-                </div>
-            )}
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

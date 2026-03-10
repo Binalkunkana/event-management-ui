@@ -39,67 +39,106 @@ const EventDetails = () => {
     );
 
     return (
-        <div className="container py-5">
-            <div className="row">
-                <div className="col-lg-8">
-                    <div className="card shadow-sm border-0 mb-4">
-                        <img
-                            src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200"
-                            className="card-img-top"
-                            alt="Event Banner"
-                            style={{ height: '400px', objectFit: 'cover' }}
-                        />
-                        <div className="card-body p-4">
-                            <span className="badge bg-warning text-dark mb-2">{event.eventCategoryName || "Event"}</span>
-                            <h2 className="fw-bold mb-3">{event.title}</h2>
-                            <p className="text-muted mb-4">{event.description || "No description available."}</p>
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-primary)', minHeight: '100vh' }}>
+            <div className="container">
+                <nav aria-label="breadcrumb" className="mb-4 animate-ef">
+                    <ol className="breadcrumb">
+                        <li className="breadcrumb-item"><Link to="/events" className="text-decoration-none text-secondary">Events</Link></li>
+                        <li className="breadcrumb-item active" aria-current="page">{event.title || event.details}</li>
+                    </ol>
+                </nav>
 
-                            <div className="d-flex align-items-center text-muted mb-2">
-                                <i className="bi bi-geo-alt-fill me-2 text-primary"></i>
-                                {event.placeName || "Venue TBD"}
+                <div className="row g-5">
+                    <div className="col-lg-8 animate-ef" style={{ animationDelay: '0.1s' }}>
+                        <div className="ef-card p-0 overflow-hidden mb-5">
+                            <img
+                                src={event.imagePath ? `https://localhost:7187/EventImages/${event.imagePath}` : "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200"}
+                                alt={event.title || event.details}
+                                className="w-100"
+                                style={{ height: '500px', objectFit: 'cover' }}
+                            />
+                            <div className="p-5">
+                                <span className="ef-badge mb-3" style={{ backgroundColor: 'var(--ef-accent-lavender)', color: 'white' }}>
+                                    {event.eventCategoryName || "Featured Event"}
+                                </span>
+                                <h1 className="fw-800 display-5 mb-4">{event.title || event.details}</h1>
+
+                                <div className="mb-5">
+                                    <h5 className="fw-800 mb-3">About this event</h5>
+                                    <p className="text-secondary lh-lg" style={{ fontSize: '1.1rem' }}>
+                                        {event.description || event.details || "No detailed description provided for this event. Join us for an unforgettable experience filled with learning, networking, and fun."}
+                                    </p>
+                                </div>
+
+                                <div className="row g-4 border-top pt-5">
+                                    <div className="col-md-6">
+                                        <div className="d-flex align-items-start gap-3">
+                                            <div className="bg-light p-3 rounded-circle">
+                                                <span className="material-symbols-outlined text-dark">location_on</span>
+                                            </div>
+                                            <div>
+                                                <h6 className="fw-800 mb-1">Location</h6>
+                                                <p className="text-secondary mb-0">{event.placeName || "Venue details will be shared soon"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="d-flex align-items-start gap-3">
+                                            <div className="bg-light p-3 rounded-circle">
+                                                <span className="material-symbols-outlined text-dark">category</span>
+                                            </div>
+                                            <div>
+                                                <h6 className="fw-800 mb-1">Category</h6>
+                                                <p className="text-secondary mb-0">{event.eventCategoryName || "General Admission"}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="col-lg-4">
-                    <div className="card shadow-sm border-0 sticky-top" style={{ top: '24px' }}>
-                        <div className="card-body p-4">
-                            <h5 className="fw-bold mb-4">Event Details</h5>
+                    <div className="col-lg-4 animate-ef" style={{ animationDelay: '0.2s' }}>
+                        <div className="ef-card sticky-top" style={{ top: '100px' }}>
+                            <h4 className="fw-800 mb-4">Event Details</h4>
 
-                            <div className="mb-4">
-                                <div className="d-flex align-items-center mb-3">
-                                    <div className="bg-light p-2 rounded me-3">
-                                        <i className="bi bi-calendar-event text-primary"></i>
-                                    </div>
+                            <div className="d-flex flex-column gap-4 mb-5">
+                                <div className="d-flex align-items-center gap-3">
+                                    <span className="material-symbols-outlined text-secondary">calendar_today</span>
                                     <div>
-                                        <div className="small text-muted">Date</div>
-                                        <div className="fw-bold">{event.eventDate ? new Date(event.eventDate).toLocaleDateString() : "TBD"}</div>
+                                        <div className="ef-label mb-0">Date</div>
+                                        <div className="fw-800">{event.startDate ? new Date(event.startDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : "Date to be announced"}</div>
                                     </div>
                                 </div>
-                                <div className="d-flex align-items-center">
-                                    <div className="bg-light p-2 rounded me-3">
-                                        <i className="bi bi-clock text-primary"></i>
-                                    </div>
+
+                                <div className="d-flex align-items-center gap-3">
+                                    <span className="material-symbols-outlined text-secondary">schedule</span>
                                     <div>
-                                        <div className="small text-muted">Time</div>
-                                        <div className="fw-bold">{event.startTime || "09:00 AM"} - {event.endTime || "05:00 PM"}</div>
+                                        <div className="ef-label mb-0">Time</div>
+                                        <div className="fw-800">{event.startTime || "09:00 AM"} - {event.endTime || "05:00 PM"}</div>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex align-items-center gap-3">
+                                    <span className="material-symbols-outlined text-secondary">payments</span>
+                                    <div>
+                                        <div className="ef-label mb-0">Investment</div>
+                                        <div className="fw-800 text-dark h3 mb-0">
+                                            {Number(event.fees || event.Fees || 0) === 0 ? "Complimentary" : `₹${event.fees || event.Fees}`}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-4 pt-4 border-top">
-                                <div className="d-flex justify-content-between align-items-center mb-4">
-                                    <span className="text-muted">Ticket Price</span>
-                                    <span className="h4 fw-bold text-primary mb-0">{event.price ? `₹${event.price}` : "FREE"}</span>
-                                </div>
-                                <Link to={`/booking/${event.scheduleEventId}`} className="btn btn-primary w-100 py-3 fw-bold">
-                                    Book Now
-                                </Link>
-                            </div>
+                            <Link to={`/booking/${event.scheduleEventId}`} className="btn-pill btn-primary w-100 py-3 mb-3 text-center text-decoration-none d-block shadow">
+                                Reserve Your Spot
+                            </Link>
 
-                            <div className="text-center mt-3">
-                                <small className="text-muted">Secure checkout by Manup</small>
+                            <div className="text-center">
+                                <p className="small text-secondary mb-0">
+                                    <span className="material-symbols-outlined align-middle me-1" style={{ fontSize: '18px' }}>verified_user</span>
+                                    Secure booking via <span className="fw-800 text-dark">EventFlow</span>
+                                </p>
                             </div>
                         </div>
                     </div>

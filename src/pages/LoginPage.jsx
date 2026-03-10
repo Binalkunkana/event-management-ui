@@ -72,43 +72,82 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="container d-flex justify-content-center align-items-center vh-100">
-            <div className="card p-4 shadow-sm" style={{ width: "350px" }}>
-                <h2 className="text-center mb-4">Login</h2>
+        <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center position-relative overflow-hidden" style={{ backgroundColor: 'var(--ef-bg-primary)' }}>
+            {/* Background Blurs */}
+            <div className="ef-hero-bg-blur blur-teal position-absolute" style={{ top: '-10%', left: '-10%', opacity: '0.4' }}></div>
+            <div className="ef-hero-bg-blur blur-lavender position-absolute" style={{ bottom: '-10%', right: '-10%', opacity: '0.4' }}></div>
 
-                {error && <div className="alert alert-danger py-2">{error}</div>}
+            <div className="ef-card p-5 shadow-xl animate-ef position-relative z-1" style={{ width: "100%", maxWidth: "450px" }}>
+                <div className="text-center mb-5">
+                    <div className="bg-dark text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow" style={{ width: '48px', height: '48px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>polymer</span>
+                    </div>
+                    <h2 className="fw-800 mb-1" style={{ letterSpacing: '-1px' }}>Welcome Back</h2>
+                    <p className="ef-label text-secondary">Sign in to your EventFlow account</p>
+                </div>
+
+                {error && (
+                    <div className="animate-ef mb-4">
+                        <div className="bg-danger-subtle text-danger p-3 rounded-4 small d-flex align-items-center gap-2">
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>error</span>
+                            <span className="fw-700">{error}</span>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                        <label className="form-label">Email</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+                    <div className="mb-4">
+                        <label className="ef-label">Professional Email</label>
+                        <div className="position-relative">
+                            <span className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary material-symbols-outlined" style={{ fontSize: '20px' }}>mail</span>
+                            <input
+                                type="email"
+                                className="ef-input ps-5"
+                                placeholder="name@company.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="mb-3">
-                        <label className="form-label">Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                    <div className="mb-5">
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                            <label className="ef-label mb-0">Secure Password</label>
+                            <a href="#" className="small ef-label text-secondary text-decoration-none">Forgot?</a>
+                        </div>
+                        <div className="position-relative">
+                            <span className="position-absolute start-0 top-50 translate-middle-y ms-3 text-secondary material-symbols-outlined" style={{ fontSize: '20px' }}>lock</span>
+                            <input
+                                type="password"
+                                className="ef-input ps-5"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <button
                         type="submit"
-                        className="btn btn-primary w-100 mt-2"
+                        className="btn-pill btn-primary w-100 py-3 shadow-lg"
                         disabled={loading}
                     >
-                        {loading ? "Logging in..." : "Login"}
+                        {loading ? (
+                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                <span className="spinner-border spinner-border-sm"></span>
+                                <span>Authenticating...</span>
+                            </div>
+                        ) : "Institutional Login"}
                     </button>
                 </form>
+
+                <div className="text-center mt-5">
+                    <p className="ef-label text-secondary mb-0">
+                        Don't have an account? <a href="#" className="text-dark fw-800 text-decoration-none">Contact Administrator</a>
+                    </p>
+                </div>
             </div>
         </div>
     );

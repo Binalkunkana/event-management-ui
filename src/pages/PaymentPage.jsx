@@ -101,93 +101,116 @@ const PaymentPage = () => {
     );
 
     return (
-        <div className="container py-5">
-            <div className="row justify-content-center">
-                <div className="col-md-6 mt-4">
-                    <div className="card shadow-sm border-0">
-                        <div className="card-header bg-warning text-dark py-3">
-                            <h4 className="mb-0 fw-bold text-center">Checkout</h4>
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-primary)', minHeight: '100vh' }}>
+            <div className="container animate-ef">
+                <div className="row justify-content-center">
+                    <div className="col-lg-6">
+                        <div className="text-center mb-5">
+                            <h1 className="fw-800 mb-2">Secure Checkout</h1>
+                            <p className="ef-label text-secondary">Finalize your registration with EventFlow</p>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="text-center mb-4 p-3 bg-light rounded">
-                                <span className="text-muted d-block small mb-1">Total Amount Payable</span>
-                                <h2 className="fw-bold text-primary mb-0">₹{amount}</h2>
+
+                        <div className="ef-card p-5 shadow-lg">
+                            <div className="text-center mb-5 p-4 bg-light rounded-4">
+                                <span className="ef-label d-block mb-1">Total Subscription Due</span>
+                                <h1 className="fw-800 text-dark mb-0" style={{ fontSize: '3rem' }}>₹{amount}</h1>
                             </div>
 
-                            <div className="mb-4">
-                                <label className="form-label fw-bold small text-uppercase">Payment Method</label>
-                                <div className="btn-group w-100" role="group">
-                                    <input type="radio" className="btn-check" name="method" id="card" checked={method === 'Card'} onChange={() => setMethod('Card')} />
-                                    <label className="btn btn-outline-primary" htmlFor="card">Card</label>
-
-                                    <input type="radio" className="btn-check" name="method" id="qr" checked={method === 'QR'} onChange={() => setMethod('QR')} />
-                                    <label className="btn btn-outline-primary" htmlFor="qr">UPI / QR</label>
-
-                                    <input type="radio" className="btn-check" name="method" id="net" checked={method === 'NetBanking'} onChange={() => setMethod('NetBanking')} />
-                                    <label className="btn btn-outline-primary" htmlFor="net">Net Banking</label>
+                            <div className="mb-5">
+                                <label className="ef-label text-center d-block mb-3">Prefered Payment Method</label>
+                                <div className="d-flex gap-2 p-1 bg-white rounded-pill border border-light shadow-sm">
+                                    <button
+                                        className={`btn-pill flex-grow-1 border-0 ${method === 'Card' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                        onClick={() => setMethod('Card')}
+                                    >
+                                        Card
+                                    </button>
+                                    <button
+                                        className={`btn-pill flex-grow-1 border-0 ${method === 'QR' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                        onClick={() => setMethod('QR')}
+                                    >
+                                        UPI / QR
+                                    </button>
+                                    <button
+                                        className={`btn-pill flex-grow-1 border-0 ${method === 'NetBanking' ? 'btn-primary' : 'bg-transparent text-secondary'}`}
+                                        onClick={() => setMethod('NetBanking')}
+                                    >
+                                        Net Banking
+                                    </button>
                                 </div>
                             </div>
 
                             <form onSubmit={handlePayment}>
                                 {method === "Card" && (
-                                    <div className="fade-in">
-                                        <div className="mb-3">
-                                            <label className="form-label">Card Holder Name</label>
-                                            <input type="text" name="name" className="form-control" placeholder="Full name on card" onChange={handleChange} required />
+                                    <div className="animate-ef">
+                                        <div className="mb-4">
+                                            <label className="ef-label">Account Holder Name</label>
+                                            <input type="text" name="name" className="ef-input" placeholder="Full name as on card" onChange={handleChange} required />
                                         </div>
-                                        <div className="mb-3">
-                                            <label className="form-label">Card Number</label>
-                                            <input type="text" name="cardNumber" className="form-control" placeholder="1234 5678 9101 1121" onChange={handleChange} required />
+                                        <div className="mb-4">
+                                            <label className="ef-label">Card Number</label>
+                                            <input type="text" name="cardNumber" className="ef-input" placeholder="0000 0000 0000 0000" onChange={handleChange} required />
                                         </div>
-                                        <div className="row">
-                                            <div className="col-6 mb-3">
-                                                <label className="form-label">Expiry</label>
-                                                <input type="text" name="expiry" className="form-control" placeholder="MM/YY" onChange={handleChange} required />
+                                        <div className="row g-3">
+                                            <div className="col-6">
+                                                <label className="ef-label">Expiry Date</label>
+                                                <input type="text" name="expiry" className="ef-input" placeholder="MM/YY" onChange={handleChange} required />
                                             </div>
-                                            <div className="col-6 mb-3">
-                                                <label className="form-label">CVV</label>
-                                                <input type="password" name="cvv" className="form-control" placeholder="***" maxLength="3" onChange={handleChange} required />
+                                            <div className="col-6">
+                                                <label className="ef-label">Security Code</label>
+                                                <input type="password" name="cvv" className="ef-input" placeholder="***" maxLength="3" onChange={handleChange} required />
                                             </div>
                                         </div>
                                     </div>
                                 )}
 
                                 {method === "QR" && (
-                                    <div className="text-center py-3 fade-in">
-                                        <p className="small text-muted mb-3">Scan to pay with any UPI app</p>
-                                        <div className="mb-4 border p-2 d-inline-block bg-white shadow-sm">
+                                    <div className="text-center py-4 animate-ef">
+                                        <p className="ef-label text-secondary mb-4">Fast and secure payment with any UPI app</p>
+                                        <div className="mb-5 p-3 bg-white rounded-4 border border-light shadow-sm d-inline-block">
                                             <img
-                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=manup@upi&pn=ManupEvents&am=${amount}&cu=INR`}
-                                                alt="QR Code"
-                                                style={{ width: '180px' }}
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=eventflow@upi&pn=EventFlowSecure&am=${amount}&cu=INR`}
+                                                alt="Secure QR Code"
+                                                style={{ width: '200px', height: '200px' }}
                                             />
                                         </div>
-                                        <div className="mb-3 text-start">
-                                            <label className="form-label">Your UPI ID</label>
-                                            <input type="text" name="upiId" className="form-control" placeholder="user@bank" onChange={handleChange} required />
+                                        <div className="text-start">
+                                            <label className="ef-label">Enter your Virtual Payment Address (UPI ID)</label>
+                                            <input type="text" name="upiId" className="ef-input" placeholder="username@provider" onChange={handleChange} required />
                                         </div>
                                     </div>
                                 )}
 
                                 {method === "NetBanking" && (
-                                    <div className="mb-4 fade-in">
-                                        <label className="form-label">Select Bank</label>
-                                        <select name="bankName" className="form-select" onChange={handleChange} required defaultValue="">
-                                            <option value="" disabled>Choose your bank</option>
+                                    <div className="mb-5 animate-ef">
+                                        <label className="ef-label">Select Secure Financial Institution</label>
+                                        <select name="bankName" className="ef-input" onChange={handleChange} required defaultValue="">
+                                            <option value="" disabled>Choose your trusted bank</option>
                                             <option value="SBI">State Bank of India</option>
                                             <option value="HDFC">HDFC Bank</option>
                                             <option value="ICICI">ICICI Bank</option>
+                                            <option value="Axis">Axis Bank</option>
                                         </select>
                                     </div>
                                 )}
 
-                                <button type="submit" className="btn btn-primary w-100 py-3 fw-bold mt-4" disabled={loading}>
-                                    {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : `Pay ₹${amount}`}
+                                <button type="submit" className="btn-pill btn-primary w-100 py-3 mt-4 shadow" disabled={loading}>
+                                    {loading ? (
+                                        <span className="spinner-border spinner-border-sm me-2"></span>
+                                    ) : (
+                                        <span className="d-flex align-items-center justify-content-center gap-2">
+                                            <span className="material-symbols-outlined">verified</span>
+                                            Complete Secure Payment
+                                        </span>
+                                    )}
                                 </button>
                             </form>
 
-                            <div className="text-center mt-4">
-                                <small className="text-muted"><i className="bi bi-shield-lock-fill me-1"></i> Secure Payment by Manup</small>
+                            <div className="text-center mt-5">
+                                <p className="small text-secondary mb-0">
+                                    <span className="material-symbols-outlined align-middle me-1" style={{ fontSize: '18px' }}>lock</span>
+                                    256-bit SSL Encrypted Payment by <span className="fw-800 text-dark">EventFlow</span>
+                                </p>
                             </div>
                         </div>
                     </div>

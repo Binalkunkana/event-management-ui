@@ -125,61 +125,81 @@ const BookingPage = () => {
     if (!event) return <div className="p-5 text-center">Event not found</div>;
 
     return (
-        <div className="container py-5">
-            <div className="card shadow border-0 col-md-8 mx-auto">
-                <div className="card-header bg-primary text-white p-4">
-                    <h3 className="mb-0">Event Booking</h3>
-                    <p className="mb-0 small">{event.title || "Book your event"}</p>
-                </div>
-                <div className="card-body p-4">
-                    <div className="alert alert-info py-2">
-                        <i className="bi bi-info-circle me-2"></i>
-                        Booking for: <strong>{new Date(event.startDate || event.eventDate).toLocaleDateString()}</strong> at {event.startTime || "09:00 AM"}
+        <div className="container-fluid py-5" style={{ backgroundColor: 'var(--ef-bg-secondary)', minHeight: '100vh' }}>
+            <div className="container">
+                <div className="col-lg-8 mx-auto animate-ef">
+                    <div className="text-center mb-5">
+                        <h1 className="fw-800 mb-2">Event Registration</h1>
+                        <p className="ef-label text-secondary">Complete your booking for {event.title || event.details}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="mt-4">
-                        <div className="row g-3">
-                            <div className="col-12">
-                                <label className="form-label fw-bold">Full Name</label>
-                                <input type="text" name="name" required className="form-control" placeholder="Enter your full name" value={bookingData.name} onChange={handleInputChange} />
+                    <div className="ef-card p-5 shadow-sm">
+                        <div className="bg-light p-4 rounded-4 mb-5 d-flex align-items-center gap-3">
+                            <div className="bg-white p-3 rounded-circle shadow-sm">
+                                <span className="material-symbols-outlined text-dark">event_available</span>
                             </div>
-                            <div className="col-md-6">
-                                <label className="form-label fw-bold">Email</label>
-                                <input type="email" name="email" required className="form-control bg-light" value={bookingData.email} readOnly />
-                            </div>
-                            <div className="col-md-6">
-                                <label className="form-label fw-bold">Phone</label>
-                                <input type="tel" name="phone" required className="form-control" placeholder="Enter phone number" value={bookingData.phone} onChange={handleInputChange} />
-                            </div>
-                            <div className="col-12">
-                                <label className="form-label fw-bold">ID Proof (PDF/Image)</label>
-                                <input type="file" name="idProofDocument" accept=".pdf,.jpg,.jpeg,.png" required className="form-control" onChange={handleInputChange} />
-                            </div>
-                            <div className="col-12">
-                                <label className="form-label fw-bold">Address</label>
-                                <input type="text" name="address" required className="form-control" placeholder="Full address" value={bookingData.address} onChange={handleInputChange} />
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label fw-bold">City</label>
-                                <input type="text" name="city" required className="form-control" value={bookingData.city} onChange={handleInputChange} />
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label fw-bold">State</label>
-                                <input type="text" name="state" required className="form-control" value={bookingData.state} onChange={handleInputChange} />
-                            </div>
-                            <div className="col-md-4">
-                                <label className="form-label fw-bold">Country</label>
-                                <input type="text" name="country" required className="form-control" value={bookingData.country} onChange={handleInputChange} />
+                            <div>
+                                <h6 className="fw-800 mb-1">Schedule Confirmation</h6>
+                                <p className="text-secondary small mb-0">
+                                    {new Date(event.startDate || event.eventDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at {event.startTime || "09:00 AM"}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="mt-5 text-center pt-4 border-top">
-                            <div className="h4 mb-4">Total Amount: <span className="text-primary fw-bold">₹{bookingData.totalAmount}</span></div>
-                            <button type="submit" className="btn btn-primary btn-lg px-5 fw-bold">
-                                Confirm Booking
-                            </button>
-                        </div>
-                    </form>
+                        <form onSubmit={handleSubmit}>
+                            <div className="row g-4">
+                                <div className="col-12">
+                                    <label className="ef-label">Full Name</label>
+                                    <input type="text" name="name" required className="ef-input" placeholder="Enter your legal name" value={bookingData.name} onChange={handleInputChange} />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="ef-label">Email Address</label>
+                                    <input type="email" name="email" required className="ef-input" style={{ backgroundColor: '#fdfdfd', cursor: 'not-allowed' }} value={bookingData.email} readOnly />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="ef-label">Phone Number</label>
+                                    <input type="tel" name="phone" required className="ef-input" placeholder="+91 00000 00000" value={bookingData.phone} onChange={handleInputChange} />
+                                </div>
+                                <div className="col-12">
+                                    <label className="ef-label">Identity Verification (ID Proof)</label>
+                                    <div className="position-relative">
+                                        <input type="file" name="idProofDocument" accept=".pdf,.jpg,.jpeg,.png" required className="ef-input" onChange={handleInputChange} />
+                                        <span className="position-absolute end-0 top-50 translate-middle-y me-3 text-secondary material-symbols-outlined">upload_file</span>
+                                    </div>
+                                    <small className="text-muted mt-2 d-block">Please upload a valid PDF or Image of your official ID.</small>
+                                </div>
+                                <div className="col-12">
+                                    <label className="ef-label">Residential Address</label>
+                                    <input type="text" name="address" required className="ef-input" placeholder="House no, Street, Landmark" value={bookingData.address} onChange={handleInputChange} />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="ef-label">City</label>
+                                    <input type="text" name="city" required className="ef-input" value={bookingData.city} onChange={handleInputChange} />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="ef-label">State</label>
+                                    <input type="text" name="state" required className="ef-input" value={bookingData.state} onChange={handleInputChange} />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="ef-label">Country</label>
+                                    <input type="text" name="country" required className="ef-input" value={bookingData.country} onChange={handleInputChange} />
+                                </div>
+                            </div>
+
+                            <div className="mt-5 pt-5 border-top border-light text-center">
+                                <div className="d-flex justify-content-between align-items-center mb-4 px-3">
+                                    <span className="ef-label text-dark fw-800 h5 mb-0">Total Investment</span>
+                                    <span className="h3 fw-800 mb-0" style={{ color: 'var(--ef-text-primary)' }}>₹{bookingData.totalAmount}</span>
+                                </div>
+                                <button type="submit" className="btn-pill btn-primary w-100 py-3 shadow">
+                                    Confirm Registration
+                                </button>
+                                <p className="text-secondary small mt-4">
+                                    By clicking confirm, you agree to our <span className="text-dark fw-800">Terms of Service</span>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

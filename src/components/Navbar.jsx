@@ -3,7 +3,6 @@ import "../index.css";
 
 const Navbar = () => {
     const navigate = useNavigate();
-    const role = localStorage.getItem("role")?.toLowerCase();
     const isLoggedIn = !!localStorage.getItem("token");
 
     const handleLogout = () => {
@@ -38,18 +37,15 @@ const Navbar = () => {
                 <div className="collapse navbar-collapse justify-content-center" id="navbarNav">
                     <ul className="navbar-nav gap-lg-4 align-items-center">
                         <li className="nav-item">
-                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/">Overview</Link>
+                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/">Home</Link>
+                        </li>
+                        
+
+                        <li className="nav-item">
+                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/about-us">About Us</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/events">Experiences</Link>
-                        </li>
-                        {isLoggedIn && (
-                            <li className="nav-item">
-                                <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/userdashboard">Dashboard</Link>
-                            </li>
-                        )}
-                        <li className="nav-item">
-                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/about">Our Story</Link>
+                            <Link className="nav-link ef-label text-dark mb-0 py-1" style={{ fontSize: '0.85rem' }} to="/contact-us">Contact Us</Link>
                         </li>
                     </ul>
                 </div>
@@ -58,9 +54,9 @@ const Navbar = () => {
                 <div className="d-none d-lg-block">
                     {isLoggedIn ? (
                         <div className="d-flex align-items-center gap-3">
-                            <div className="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                            <Link to="/profile" className="bg-light rounded-circle p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
                                 <span className="material-symbols-outlined text-dark">person</span>
-                            </div>
+                            </Link>
                             <button onClick={handleLogout} className="btn-pill btn-outline py-2 px-3 small border-0 bg-transparent text-secondary">
                                 <span className="material-symbols-outlined align-middle" style={{ fontSize: '20px' }}>logout</span>
                             </button>

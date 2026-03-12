@@ -49,6 +49,16 @@ const BookingPage = () => {
             setEvent(evt);
             const price = Number(evt.fees || evt.Fees || 0);
             setBookingData(prev => ({ ...prev, totalAmount: price }));
+
+            // Prevent booking past events
+            const eventDate = new Date(evt.startDate || evt.eventDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (eventDate < today) {
+                alert("This event has already passed and cannot be booked.");
+                navigate('/events');
+            }
         } catch (error) {
             console.error("Failed to load event", error);
         } finally {

@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import ErrorBoundary from "./components/ErrorBoundary";
 import UserList from "./components/UserList";
 import UserForm from "./components/UserForm";
 import UserDashboard from "./pages/UserDashboard";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
+import HomePage from "./pages/HomePage";
 import EventListing from "./pages/EventListing";
 import EventDetails from "./pages/EventDetails";
 import BookingPage from "./pages/BookingPage";
@@ -28,6 +31,14 @@ import OrganizerLayout from "./components/OrganizerLayout";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import OrganizerScheduleEventList from "./pages/OrganizerScheduleEventList";
 
+import NotFound from "./pages/errors/NotFound";
+import ServerError from "./pages/errors/ServerError";
+import Unauthorized from "./pages/errors/Unauthorized";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import UserProfile from "./pages/UserProfile";
+
 import "./App.css";
 
 // Layout component to handle conditional Navbar rendering
@@ -50,49 +61,159 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes with Layout */}
-        <Route path="/" element={<Layout><UserDashboard /></Layout>} />
-        <Route path="/user" element={<Layout><LandingPage /></Layout>} />
-        <Route path="/events" element={<Layout><EventListing /></Layout>} />
-        <Route path="/events/:id" element={<Layout><EventDetails /></Layout>} />
-        <Route path="/booking/:id" element={<Layout><BookingPage /></Layout>} />
-        <Route path="/payment/:bookingId" element={<Layout><PaymentPage /></Layout>} />
-        <Route path="/receipt/:bookingId" element={<Layout><ReceiptPage /></Layout>} />
-        <Route path="/dashboard" element={<Layout><UserDashboard /></Layout>} />
-        <Route path="/my-bookings" element={<Layout><UserDashboard /></Layout>} />
-        <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+    <ErrorBoundary>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1e293b',
+            color: '#f8fafc',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+          },
+          error: {
+            iconTheme: {
+              primary: '#ff4d4d',
+              secondary: '#fff',
+            },
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+      <Router>
+        <Routes>
+          {/* Public Routes with Layout */}
+          <Route path="/" element={<Layout><HomePage /></Layout>} />
+          <Route path="/user" element={<Layout><LandingPage /></Layout>} />
+          <Route path="/events" element={<Layout><EventListing /></Layout>} />
+          <Route path="/events/:id" element={<Layout><EventDetails /></Layout>} />
+          <Route path="/booking/:id" element={<Layout><BookingPage /></Layout>} />
+          <Route path="/payment/:bookingId" element={<Layout><PaymentPage /></Layout>} />
+          <Route path="/receipt/:bookingId" element={<Layout><ReceiptPage /></Layout>} />
+          <Route path="/dashboard" element={<Layout><UserDashboard /></Layout>} />
+          <Route path="/my-bookings" element={<Layout><UserDashboard /></Layout>} />
+          <Route path="/about-us" element={<Layout><AboutUs /></Layout>} />
+          <Route path="/contact-us" element={<Layout><ContactUs /></Layout>} />
+          <Route path="/profile" element={<Layout><UserProfile /></Layout>} />
+          <Route path="/login" element={<Layout><LoginPage /></Layout>} />
 
-        {/* Admin Routes with AdminLayout */}
-        <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-        <Route path="/admin/login" element={<LoginPage />} />
-        <Route path="/admin/users" element={<AdminLayout><UserList /></AdminLayout>} />
-        <Route path="/admin/bookings" element={<AdminLayout><BookingList /></AdminLayout>} />
-        <Route path="/admin/bookings/add" element={<AdminLayout><BookingForm /></AdminLayout>} />
-        <Route path="/admin/bookings/edit/:id" element={<AdminLayout><BookingForm /></AdminLayout>} />
-        <Route path="/admin/payments" element={<AdminLayout><PaymentList /></AdminLayout>} />
-        <Route path="/admin/payments/add" element={<AdminLayout><PaymentForm /></AdminLayout>} />
-        <Route path="/admin/payments/edit/:id" element={<AdminLayout><PaymentForm /></AdminLayout>} />
-        <Route path="/admin/categories" element={<AdminLayout><CategoryList /></AdminLayout>} />
-        <Route path="/admin/categories/add" element={<AdminLayout><CategoryForm /></AdminLayout>} />
-        <Route path="/admin/categories/edit/:id" element={<AdminLayout><CategoryForm /></AdminLayout>} />
-        <Route path="/admin/places" element={<AdminLayout><PlaceList /></AdminLayout>} />
-        <Route path="/admin/places/add" element={<AdminLayout><PlaceForm /></AdminLayout>} />
-        <Route path="/admin/places/edit/:id" element={<AdminLayout><PlaceForm /></AdminLayout>} />
-        <Route path="/admin/events-list" element={<AdminLayout><ScheduleEventList /></AdminLayout>} />
-        <Route path="/admin/events/add" element={<AdminLayout><ScheduleEventForm /></AdminLayout>} />
-        <Route path="/admin/events/edit/:id" element={<AdminLayout><ScheduleEventForm /></AdminLayout>} />
+          {/* Admin Routes with AdminLayout */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><AdminDashboard /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/admin/users" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><UserList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bookings" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><BookingList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bookings/add" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><BookingForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bookings/edit/:id" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><BookingForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/payments" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PaymentList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/payments/add" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PaymentForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/payments/edit/:id" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PaymentForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/categories" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><CategoryList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/categories/add" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><CategoryForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/categories/edit/:id" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><CategoryForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/places" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PlaceList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/places/add" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PlaceForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/places/edit/:id" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><PlaceForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/events-list" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><ScheduleEventList /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/events/add" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><ScheduleEventForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/events/edit/:id" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <AdminLayout><ScheduleEventForm /></AdminLayout>
+            </ProtectedRoute>
+          } />
 
-        {/* Organizer Routes */}
-        <Route path="/organizer" element={<OrganizerLayout><OrganizerDashboard /></OrganizerLayout>} />
-        <Route path="/organizer/events" element={<OrganizerLayout><OrganizerScheduleEventList /></OrganizerLayout>} />
+          {/* Organizer Routes */}
+          <Route path="/organizer" element={
+            <ProtectedRoute allowedRoles={['Organizer', 'Admin']}>
+              <OrganizerLayout><OrganizerDashboard /></OrganizerLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/organizer/events" element={
+            <ProtectedRoute allowedRoles={['Organizer', 'Admin']}>
+              <OrganizerLayout><OrganizerScheduleEventList /></OrganizerLayout>
+            </ProtectedRoute>
+          } />
 
-        {/* User Management */}
-        <Route path="/users/add" element={<UserForm />} />
-        <Route path="/users/edit/:id" element={<UserForm />} />
-      </Routes>
-    </Router>
+          {/* User Management */}
+          <Route path="/users/edit/:id" element={<UserForm />} />
+
+          {/* Error Routes */}
+          <Route path="/404" element={<NotFound />} />
+          <Route path="/500" element={<ServerError />} />
+          <Route path="/403" element={<Unauthorized />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

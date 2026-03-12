@@ -47,7 +47,12 @@ const UserDashboard = () => {
         } else if (activeTab === 'bookings' && !hasToken) {
             setActiveTab('upcoming');
         }
-    }, [location.pathname, navigate, activeTab]);
+
+        // Reset to 'upcoming' when clicking Home/Dashboard without specific tab state
+        if ((location.pathname === '/' || location.pathname === '/dashboard') && !location.state?.activeTab) {
+            setActiveTab('upcoming');
+        }
+    }, [location.pathname, location.state, navigate, activeTab]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -195,6 +200,7 @@ const UserDashboard = () => {
                 });
 
             setMyBookings(userBookings);
+            console.log(`[Dashboard] Fetched ${userBookings.length} bookings for ${currentUserEmail}`);
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
             if (err.response?.status === 401) {
@@ -280,6 +286,7 @@ const UserDashboard = () => {
 
         if (activeTab === 'upcoming' && !isUpcoming) return false;
         if (activeTab === 'past' && isUpcoming) return false;
+        if (activeTab === 'bookings') return false; // Bookings handled in a different map below
 
         // 2. Applied Filters (Applied only when button is clicked)
 
@@ -486,21 +493,35 @@ const UserDashboard = () => {
                                                             <h5 className="fw-800 mb-3">{event?.details || bk.scheduleEventDetails}</h5>
 
                                                             <div className="mt-auto pt-3 border-top border-light d-flex flex-wrap gap-2">
-                                                                {!bk.isCancelled && bk.isPaid && (
-                                                                    <button className="btn-pill btn-outline py-1 px-3 small" onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}>
-                                                                        Receipt
-                                                                    </button>
-                                                                )}
-                                                                {!bk.isCancelled && !bk.isPaid && (
-                                                                    <button className="btn-pill btn-primary py-1 px-3 small" onClick={() => navigate(`/payment/${bk.eventBookingId}`)}>
-                                                                        Pay
-                                                                    </button>
-                                                                )}
-                                                                {!bk.isCancelled && (
-                                                                    <button className="btn-pill btn-outline py-1 px-3 small text-danger" onClick={() => handleCancelBooking(bk)}>
-                                                                        Cancel
-                                                                    </button>
-                                                                )}
+                                                                {(() => {
+                                                                    const eventDate = event ? new Date(event.startDate) : null;
+                                                                    const today = new Date();
+                                                                    today.setHours(0, 0, 0, 0);
+                                                                    const hasPassed = eventDate && eventDate < today;
+
+                                                                    return (
+                                                                        <>
+                                                                            {!bk.isCancelled && bk.isPaid && (
+                                                                                <button className="btn-pill btn-outline py-1 px-3 small" onClick={() => navigate(`/receipt/${bk.eventBookingId}`)}>
+                                                                                    Receipt
+                                                                                </button>
+                                                                            )}
+                                                                            {!bk.isCancelled && !bk.isPaid && !hasPassed && (
+                                                                                <button className="btn-pill btn-primary py-1 px-3 small" onClick={() => navigate(`/payment/${bk.eventBookingId}`)}>
+                                                                                    Pay
+                                                                                </button>
+                                                                            )}
+                                                                            {!bk.isCancelled && !bk.isPaid && hasPassed && (
+                                                                                <span className="text-secondary small">Expired</span>
+                                                                            )}
+                                                                            {!bk.isCancelled && (
+                                                                                <button className="btn-pill btn-outline py-1 px-3 small text-danger" onClick={() => handleCancelBooking(bk)}>
+                                                                                    Cancel
+                                                                                </button>
+                                                                            )}
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -557,9 +578,16 @@ const UserDashboard = () => {
                                                                     View Booking
                                                                 </button>
                                                             ) : (
-                                                                <button className="btn-pill btn-primary w-100" onClick={() => navigate(`/booking/${evt.scheduleEventId}`)}>
-                                                                    Book Now
-                                                                </button>
+                                                                // Prevent booking past events
+                                                                new Date(evt.startDate) >= new Date().setHours(0,0,0,0) ? (
+                                                                    <button className="btn-pill btn-primary w-100" onClick={() => navigate(`/booking/${evt.scheduleEventId}`)}>
+                                                                        Book Now
+                                                                    </button>
+                                                                ) : (
+                                                                    <button className="btn-pill btn-outline w-100 opacity-50 cursor-not-allowed" disabled title="This event has already passed.">
+                                                                        Event Ended
+                                                                    </button>
+                                                                )
                                                             )}
                                                         </div>
                                                     </div>

@@ -87,9 +87,9 @@ const ReceiptPage = () => {
                                     <span className="material-symbols-outlined align-middle me-2">print</span>
                                     Print Receipt
                                 </button>
-                                <button className="btn-pill btn-outline px-4 py-2" onClick={() => navigate('/userdashboard')}>
-                                    <span className="material-symbols-outlined align-middle me-2">dashboard</span>
-                                    My Dashboard
+                                <button className="btn-pill btn-outline px-4 py-2" onClick={() => navigate('/   ')}>
+                                    <span className="material-symbols-outlined align-middle me-2">home</span>
+                                    Home
                                 </button>
                             </div>
                         </div>

@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getScheduledEventById } from "../api/eventApi";
+import { getAllBookings } from "../api/bookingApi";
 import "../index.css";
 
 const EventDetails = () => {
     const { id } = useParams();
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const [isBooked, setIsBooked] = useState(false);
+    const isLoggedIn = !!localStorage.getItem("token");
 
     useEffect(() => {
         fetchEventDetails();
@@ -15,7 +19,21 @@ const EventDetails = () => {
     const fetchEventDetails = async () => {
         try {
             const res = await getScheduledEventById(id);
-            setEvent(res.data.data);
+            const evt = res.data.data;
+            setEvent(evt);
+
+            if (isLoggedIn) {
+                const bookingRes = await getAllBookings();
+                const bookings = bookingRes.data?.data || bookingRes.data?.$values || bookingRes.data || [];
+                const currentUserEmail = localStorage.getItem("email")?.toLowerCase().split('+')[0];
+                
+                const hasBooking = Array.isArray(bookings) && bookings.some(bk => {
+                    const bId = String(bk.scheduleEventId || bk.ScheduleEventId);
+                    const bEmail = (bk.email || bk.Email || "").toLowerCase().split('+')[0];
+                    return bId === String(id) && bEmail === currentUserEmail && !(bk.isCancelled || bk.IsCancelled);
+                });
+                setIsBooked(hasBooking);
+            }
         } catch (error) {
             console.error("Failed to load event details", error);
         } finally {
@@ -130,9 +148,34 @@ const EventDetails = () => {
                                 </div>
                             </div>
 
-                            <Link to={`/booking/${event.scheduleEventId}`} className="btn-pill btn-primary w-100 py-3 mb-3 text-center text-decoration-none d-block shadow">
-                                Reserve Your Spot
-                            </Link>
+                            {(() => {
+                                const eventDate = new Date(event.startDate);
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const hasPassed = eventDate < today;
+
+                                if (isBooked) {
+                                    return (
+                                        <Link to="/dashboard" state={{ activeTab: 'bookings' }} className="btn-pill btn-outline w-100 py-3 mb-3 text-center text-decoration-none d-block shadow-sm">
+                                            View My Booking
+                                        </Link>
+                                    );
+                                }
+
+                                if (hasPassed) {
+                                    return (
+                                        <button className="btn-pill btn-outline w-100 py-3 mb-3 text-center opacity-50 cursor-not-allowed" disabled>
+                                            Registration Closed
+                                        </button>
+                                    );
+                                }
+
+                                return (
+                                    <Link to={`/booking/${event.scheduleEventId}`} className="btn-pill btn-primary w-100 py-3 mb-3 text-center text-decoration-none d-block shadow">
+                                        Reserve Your Spot
+                                    </Link>
+                                );
+                            })()}
 
                             <div className="text-center">
                                 <p className="small text-secondary mb-0">

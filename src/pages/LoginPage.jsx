@@ -57,11 +57,11 @@ export default function LoginPage() {
                 } else if (lowerRole === "organizer") {
                     navigate("/organizer");
                 } else {
-                    navigate("/dashboard");
+                    navigate("/");
                 }
             } else {
                 const destination = location.state?.from;
-                navigate(destination || "/dashboard");
+                navigate(destination || "/");
             }
 
         } catch (err) {
